@@ -1,6 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Prata&display=swap');
 @import "tailwindcss";
-/* @plugin "@tailwindcss/typography"; */
 
-/* @theme {
-  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
-} */
+@layer base {
+  body {
+    font-family: "Outfit", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #f9fafb;
+  }
+}
