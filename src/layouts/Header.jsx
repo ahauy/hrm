@@ -1,8 +1,8 @@
 import { Menu, Search, Mail, Bell } from "lucide-react";
 import UserProfile from "../components/user/UserProfile.jsx";
 
-export default function Header({ onToggle, onClose }) {
-  const handleToggle = onToggle || onClose;
+export default function Header({ onToggle }) {
+  const handleToggle = onToggle;
 
   return (
     <>
