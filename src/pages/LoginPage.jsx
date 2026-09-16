@@ -92,7 +92,7 @@ const LoginPage = () => {
                   className={`block w-full pl-10 pr-4 py-2.5 bg-surface-soft border ${
                     errors.username ? "border-critical" : "border-hairline"
                   } rounded-xl text-ink text-xs focus:bg-canvas focus:border-primary outline-none transition-all placeholder:text-stone`}
-                  placeholder="admin@hrm.vn hoặc tên đăng nhập"
+                  placeholder="Tên đăng nhập"
                 />
               </div>
               {errors.username && (

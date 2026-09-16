@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Briefcase, Mail, Phone } from "lucide-react";
 import AttendanceCalendar from "./AttendanceCalendar.jsx";
 
@@ -40,9 +41,9 @@ export default function EmployeeAttendanceModal({
     (att) => Number(att.employeeId || att.employee_id) === empId
   );
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 z-50 bg-ink-deep/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-[900] bg-ink-deep/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -143,4 +144,7 @@ export default function EmployeeAttendanceModal({
       </div>
     </div>
   );
+
+  const modalRoot = document.getElementById("modal-root") || document.body;
+  return createPortal(modalContent, modalRoot);
 }

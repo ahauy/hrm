@@ -5,12 +5,12 @@ import NotAuthorPage from "./NotAuthorPage.jsx";
 import TableLeaveRequests from "../components/table/TableLeaveRequests.jsx";
 import { leaveRequestsServices } from "../services/leaveRequestsServices.js";
 import { attendanceServices } from "../services/attendanceServices.js";
+import { useAttendanceAction } from "../hooks/useAttendanceAction.js";
 import api from "../utils/axios.js";
 import { toast } from "sonner";
 import { FileText, RefreshCw, CalendarCheck, Plus, Search } from "lucide-react";
 import AttendanceBadge from "../components/attendance/AttendanceBadge.jsx";
 import Attendance from "../components/attendance/Attendance.jsx";
-import { getWorkDuration } from "../utils/formatTime.js";
 import { cn } from "../utils/cn.js";
 
 export default function DashboardPage() {
@@ -20,10 +20,6 @@ export default function DashboardPage() {
   const [attendances, setAttendances] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isActionLoading, setIsActionLoading] = useState(false);
-  const [currentTime, setCurrentTime] = useState(() => new Date());
-  // const [hasCheckedIn, setHasCheckedIn] = useState(false);
-  // const [hasCheckedOut, setHasCheckedOut] = useState(false);
 
   const EMPLOYEE = "employee";
   const ADMIN = "admin";
@@ -31,29 +27,6 @@ export default function DashboardPage() {
   const role = profile?.role?.trim()?.toLowerCase() || "";
   const isAdmin = role.includes(ADMIN);
   const isEmployee = role.includes(EMPLOYEE);
-
-  // Đồng hồ chạy thời gian thực
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Ngày hôm nay theo định dạng YYYY-MM-DD
-  const todayStr = new Date().toLocaleDateString("en-CA");
-
-  // Tìm bản ghi chấm công của hôm nay
-  const todayAttendance =
-    attendances
-      .filter((a) => a.date === todayStr || a.date?.startsWith(todayStr))
-      .sort((a, b) => (b.id || 0) - (a.id || 0))[0] || null;
-
-  const hasCheckedIn = Boolean(todayAttendance?.checkIn);
-  const hasCheckedOut = Boolean(todayAttendance?.checkOut);
-
-  // useEffect(() => {
-  //   setHasCheckedIn(Boolean(todayAttendance?.checkIn));
-  //   setHasCheckedOut(Boolean(todayAttendance?.checkOut));
-  // }, [todayAttendance]);
 
   // Tải dữ liệu ban đầu
   useEffect(() => {
@@ -130,72 +103,22 @@ export default function DashboardPage() {
     }
   };
 
-  // Xử lý chấm công vào (Check-in)
-  const handleCheckIn = async () => {
-    try {
-      // Nếu chưa chấm công thì mới được chấm công, nếu rồi thì không được chấm công nữa
-      if (!todayAttendance) {
-        setIsActionLoading(true);
-        const res = await attendanceServices.checkIn();
-        // setHasCheckedIn(true);
-        toast.success("Chấm công vào thành công!");
-
-        // Cập nhật bản ghi mới tạo từ backend vào state
-        if (res && res.id) {
-          setAttendances((prev) => [res, ...prev]);
-        } else {
-          return;
-        }
-      }
-    } catch (error) {
-      console.error("Lỗi khi chấm công vào:", error);
-      const errorMsg =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Chấm công vào thất bại, vui lòng thử lại";
-      toast.error(errorMsg);
-    } finally {
-      setIsActionLoading(false);
-    }
-  };
-
-  // Xử lý chấm công ra (Check-out)
-  const handleCheckOut = async () => {
-    try {
-      // xem hôm nay đã checkin chưa, có rồi thì mới cho checkout
-      if (todayAttendance && hasCheckedIn) {
-        setIsActionLoading(true);
-        const isEnough8Hours = getWorkDuration(todayAttendance?.checkIn);
-        if (!isEnough8Hours) {
-          const confifmCheckOut = window.confirm(
-            "Bạn chưa làm đủ công! Bạn có chắc chắn muốn chần chấm công ra?",
-          );
-          if (confifmCheckOut) {
-            const res = await attendanceServices.checkOut();
-            // setHasCheckedOut(true);
-            toast.success("Chấm công ra thành công!");
-            // Cập nhật bản ghi mới tạo từ backend vào state
-            if (res && res.id) {
-              setAttendances((prev) => [res, ...prev]);
-            }
-          } else {
-            return;
-          }
-        }
-      } else {
-        return;
-      }
-    } catch (error) {
-      console.error("Lỗi khi chấm công ra:", error);
-      const errorMsg =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Chấm công ra thất bại, vui lòng thử lại";
-      toast.error(errorMsg);
-    } finally {
-      setIsActionLoading(false);
-    }
-  };
+  // Quản lý chấm công hôm nay & các hành động Check-in / Check-out qua custom hook
+  const {
+    attendanceProps,
+    todayAttendance,
+    hasCheckedIn,
+    hasCheckedOut,
+    todayStr,
+  } = useAttendanceAction({
+    attendances,
+    setAttendances,
+    currentUserId: profile?.id,
+    isAdmin,
+    onReload: handleRefresh,
+    isLoading,
+    isRefreshing,
+  });
 
   // Duyệt đơn nghỉ phép (admin)
   const handleApprove = async (row) => {
@@ -366,15 +289,7 @@ export default function DashboardPage() {
 
       {/* KHỐI CHẤM CÔNG HÔM NAY DÀNH CHO NHÂN VIÊN */}
       {isEmployee && (
-        <Attendance
-          hasCheckedIn={hasCheckedIn}
-          hasCheckedOut={hasCheckedOut}
-          currentTime={currentTime}
-          todayAttendance={todayAttendance}
-          isActionLoading={isActionLoading}
-          handleCheckIn={handleCheckIn}
-          handleCheckOut={handleCheckOut}
-        />
+        <Attendance {...attendanceProps} />
       )}
 
       {/* KHỐI CHỈ SỐ & TRẠNG THÁI PHÂN CẤP (Asymmetric Metric Layout - No Card Soup) */}
