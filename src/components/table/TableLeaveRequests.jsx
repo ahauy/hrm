@@ -15,6 +15,7 @@ export default function TableLeaveRequests({
   onReject,
   emptyText = "Không có đơn nghỉ phép nào",
   emptyAction,
+  pagination,
 }) {
   // Trạng thái badge chuẩn tokens Meta
   const renderStatus = (status) => {
@@ -171,6 +172,7 @@ export default function TableLeaveRequests({
       isLoading={isLoading}
       emptyText={emptyText}
       emptyAction={emptyAction}
+      pagination={pagination}
       rowKey="id"
     />
   );

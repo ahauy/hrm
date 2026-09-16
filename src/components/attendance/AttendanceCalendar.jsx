@@ -3,12 +3,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar as CalendarIcon,
-  Info,
-  X,
 } from "lucide-react";
-import { formatTime, formatDate } from "../../utils/formatTime.js";
+import { formatTime } from "../../utils/formatTime.js";
 import { calculateMonthlyStats } from "../../utils/attendanceCalculator.js";
 import { cn } from "../../utils/cn.js";
+import DayAttendanceDetailModal from "./DayAttendanceDetailModal.jsx";
 
 const DAYS_OF_WEEK = [
   "Thứ Hai",
@@ -110,9 +109,6 @@ export default function AttendanceCalendar({
                   ? `Lịch chấm công: ${employee.fullName || employee.username}`
                   : "Lịch sử chấm công của tôi"}
               </h2>
-              <p className="text-xs text-steel mt-0.5">
-                Ca chuẩn: 08:30 - 18:00 • Nghỉ trưa 90p (12:00 - 13:30) • Chuẩn 8h
-              </p>
             </div>
           </div>
         </div>
@@ -291,20 +287,26 @@ export default function AttendanceCalendar({
             return (
               <div
                 key={cell.key}
-                role="button"
-                tabIndex={0}
-                onClick={() => setSelectedDayDetail(data)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setSelectedDayDetail(data);
-                  }
-                }}
-                className={cn(
-                  "min-h-[90px] sm:min-h-[105px] p-2 sm:p-2.5 rounded-xl border flex flex-col justify-between text-left transition-all cursor-pointer group select-none relative",
+                role={isWeekend ? undefined : "button"}
+                tabIndex={isWeekend ? -1 : 0}
+                onClick={
+                  isWeekend ? undefined : () => setSelectedDayDetail(data)
+                }
+                onKeyDown={
                   isWeekend
-                    ? "bg-surface-soft/40 border-hairline-soft/60 hover:border-hairline"
-                    : "bg-canvas border-hairline-soft hover:border-primary/50 hover:shadow-xs",
+                    ? undefined
+                    : (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedDayDetail(data);
+                        }
+                      }
+                }
+                className={cn(
+                  "min-h-[90px] sm:min-h-[105px] p-2 sm:p-2.5 rounded-xl border flex flex-col justify-between text-left transition-all select-none relative",
+                  isWeekend
+                    ? "bg-surface-soft/40 border-hairline-soft/40 cursor-default"
+                    : "bg-canvas border-hairline-soft hover:border-primary/50 hover:shadow-xs cursor-pointer group",
                   isCurrentDay &&
                     "ring-2 ring-primary/40 border-primary shadow-xs",
                   data.checkInTime &&
@@ -332,7 +334,7 @@ export default function AttendanceCalendar({
                       isCurrentDay
                         ? "bg-primary text-white"
                         : isWeekend
-                        ? "text-stone"
+                        ? "text-stone "
                         : "text-ink-deep"
                     )}
                   >
@@ -409,158 +411,13 @@ export default function AttendanceCalendar({
         </div>
       </div>
 
-      {/* 5. Modal Chi tiết một ngày (Khi bấm vào ô ngày bất kỳ) */}
-      {selectedDayDetail && (
-        <div
-          className="fixed inset-0 z-50 bg-ink-deep/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
-          onClick={() => setSelectedDayDetail(null)}
-        >
-          <div
-            className="bg-canvas border border-hairline-soft rounded-2xl p-6 max-w-md w-full shadow-lg relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header Modal Chi tiết */}
-            <div className="flex items-start justify-between pb-4 border-b border-hairline-soft">
-              <div>
-                <span className="text-xs font-bold text-primary uppercase tracking-wider">
-                  Chi tiết chấm công
-                </span>
-                <h3 className="text-lg font-bold text-ink-deep mt-0.5">
-                  {formatDate(selectedDayDetail.dateStr)}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedDayDetail(null)}
-                className="p-1.5 rounded-lg text-stone hover:text-ink hover:bg-surface-soft transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Thân Modal */}
-            <div className="py-4 space-y-3.5 text-xs">
-              {/* Trạng thái & Số công */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-surface-soft/60 border border-hairline-soft">
-                <span className="text-steel font-medium">Đánh giá ngày:</span>
-                <span
-                  className={cn(
-                    "font-bold px-2.5 py-1 rounded-lg border text-xs",
-                    selectedDayDetail.status.badgeClass
-                  )}
-                >
-                  {selectedDayDetail.status.label} (
-                  {selectedDayDetail.credit > 0
-                    ? `${selectedDayDetail.credit} công`
-                    : "0 công"}
-                  )
-                </span>
-              </div>
-
-              {/* Bảng giờ vào/ra làm phẳng (Flattened layout - không lồng thẻ con) */}
-              <div className="p-4 rounded-2xl bg-surface-soft/60 border border-hairline-soft grid grid-cols-2 divide-x divide-hairline-soft">
-                <div className="pr-3">
-                  <span className="text-[10px] font-bold text-stone uppercase tracking-wider block">
-                    Giờ vào (Check-in)
-                  </span>
-                  <div className="mt-1 text-base font-bold font-mono text-ink-deep">
-                    {formatTime(selectedDayDetail.checkInTime)}
-                  </div>
-                  {selectedDayDetail.lateMinutes > 0 ? (
-                    <span className="text-[10px] text-attention font-semibold mt-1 block">
-                      Trễ {selectedDayDetail.lateMinutes}p (chuẩn 08:30)
-                    </span>
-                  ) : (
-                    <span className="text-[10px] text-success font-medium mt-1 block">
-                      Đúng giờ quy định
-                    </span>
-                  )}
-                </div>
-
-                <div className="pl-3">
-                  <span className="text-[10px] font-bold text-stone uppercase tracking-wider block">
-                    Giờ ra (Check-out)
-                  </span>
-                  <div className="mt-1 text-base font-bold font-mono text-ink-deep">
-                    {formatTime(selectedDayDetail.checkOutTime)}
-                  </div>
-                  <span className="text-[10px] text-steel mt-1 block">
-                    Giờ tan ca chuẩn: 18:00
-                  </span>
-                </div>
-              </div>
-
-              {/* Thống kê giờ làm & Nghỉ trưa */}
-              {selectedDayDetail.workMinutes > 0 && (
-                <div className="space-y-2 p-3 rounded-xl bg-surface-soft/40 border border-hairline-soft">
-                  <div className="flex justify-between text-steel">
-                    <span>Thời gian hiện diện:</span>
-                    <span className="font-mono font-medium text-ink">
-                      {Math.floor((selectedDayDetail.elapsedMinutes || 0) / 60)}h{" "}
-                      {String(
-                        (selectedDayDetail.elapsedMinutes || 0) % 60
-                      ).padStart(2, "0")}
-                      m
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-steel">
-                    <span>Nghỉ trưa theo quy chế (12:00 - 13:30):</span>
-                    <span className="font-mono font-medium text-ink">
-                      - {selectedDayDetail.lunchDeduction || 0} phút
-                    </span>
-                  </div>
-                  <div className="pt-2 border-t border-hairline-soft flex justify-between font-bold text-ink-deep">
-                    <span>Thời lượng tính công thực tế:</span>
-                    <span className="font-mono text-primary text-sm">
-                      {Math.floor(selectedDayDetail.workMinutes / 60)}h{" "}
-                      {String(selectedDayDetail.workMinutes % 60).padStart(
-                        2,
-                        "0"
-                      )}
-                      m
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Ghi chú giải thích chính sách */}
-              <div className="p-3 rounded-xl bg-attention/10 text-attention border border-attention/20 text-[11px] flex gap-2">
-                <Info className="w-4 h-4 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-bold">Quy tắc tính công:</span>
-                  <p className="mt-0.5 text-ink/80">
-                    {selectedDayDetail.status.key === "ON_TIME" &&
-                      "Check-in đúng giờ (trước 08:30) và làm đủ công -> Nhận 1.0 công."}
-                    {selectedDayDetail.status.key === "LATE_GRACE" &&
-                      "Đi muộn trong hạn 15 phút (08:30 - 08:45) -> Vẫn được tính trọn 1.0 công nhưng ghi nhận vi phạm đi muộn."}
-                    {selectedDayDetail.status.key === "LATE_PENALTY" &&
-                      "Đi muộn từ 15 - 60 phút (08:45 - 09:30) -> Trừ 0.25 công, ghi nhận 0.75 công."}
-                    {selectedDayDetail.status.key === "HALF_DAY" &&
-                      "Đi muộn > 60 phút hoặc làm việc từ 4h đến < 8h -> Ghi nhận nửa công (0.5 công)."}
-                    {selectedDayDetail.status.key === "MISSING_CHECKOUT" &&
-                      "Quên chấm công ra khi hết ngày -> Tạm tính 0 công (Cần gửi đơn giải trình để Admin duyệt bù)."}
-                    {selectedDayDetail.status.key === "WEEKEND" &&
-                      "Ngày nghỉ cuối tuần (Thứ Bảy / Chủ Nhật)."}
-                    {selectedDayDetail.status.key === "ABSENT" &&
-                      "Không có dữ liệu chấm công cho ngày làm việc này."}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer Modal */}
-            <div className="pt-3 border-t border-hairline-soft flex justify-end">
-              <button
-                type="button"
-                onClick={() => setSelectedDayDetail(null)}
-                className="px-4 py-2 rounded-xl bg-ink text-white font-medium text-xs hover:bg-charcoal active:scale-[0.98] transition-all cursor-pointer"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 5. Modal Chi tiết một ngày (sử dụng DayAttendanceDetailModal & createPortal) */}
+      <DayAttendanceDetailModal
+        isOpen={Boolean(selectedDayDetail)}
+        onClose={() => setSelectedDayDetail(null)}
+        dayData={selectedDayDetail}
+        employee={employee}
+      />
     </div>
   );
 }
