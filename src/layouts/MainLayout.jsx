@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
-import Footer from "./Footer";
 import { cn } from "../utils/cn.js";
 
 export default function MainLayout({ children }) {
@@ -30,7 +29,7 @@ export default function MainLayout({ children }) {
 
   return (
     <>
-      <div className="flex min-h-screen bg-[#fbfbfb] overflow-x-hidden font-sans">
+      <div className="flex min-h-screen bg-surface-soft overflow-x-hidden font-sans">
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
@@ -47,9 +46,7 @@ export default function MainLayout({ children }) {
             onToggle={() => setIsSidebarOpen((prev) => !prev)}
           />
 
-          <div className="p-4 sm:p-6 lg:p-10 flex-1 w-full">{children}</div>
-
-          <Footer />
+          <div className="p-4 sm:p-6 lg:p-8 flex-1 w-full">{children}</div>
         </main>
       </div>
     </>

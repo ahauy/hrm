@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/useAuthStore.js";
 import NotAuthorPage from "./NotAuthorPage.jsx";
 import TableLeaveRequests from "../components/table/TableLeaveRequests.jsx";
@@ -6,20 +7,11 @@ import { leaveRequestsServices } from "../services/leaveRequestsServices.js";
 import { attendanceServices } from "../services/attendanceServices.js";
 import api from "../utils/axios.js";
 import { toast } from "sonner";
-import {
-  FileText,
-  Clock,
-  CheckCircle,
-  XCircle,
-  RefreshCw,
-  CalendarCheck,
-  LogIn,
-  LogOut,
-  CheckCircle2,
-  AlertCircle,
-  CalendarDays,
-} from "lucide-react";
-import { formatTime } from "../utils/formatTime.js" 
+import { FileText, RefreshCw, CalendarCheck, Plus, Search } from "lucide-react";
+import AttendanceBadge from "../components/attendance/AttendanceBadge.jsx";
+import Attendance from "../components/attendance/Attendance.jsx";
+import { getWorkDuration } from "../utils/formatTime.js";
+import { cn } from "../utils/cn.js";
 
 export default function DashboardPage() {
   const profile = useAuthStore((state) => state.profile);
@@ -30,6 +22,8 @@ export default function DashboardPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(() => new Date());
+  // const [hasCheckedIn, setHasCheckedIn] = useState(false);
+  // const [hasCheckedOut, setHasCheckedOut] = useState(false);
 
   const EMPLOYEE = "employee";
   const ADMIN = "admin";
@@ -48,12 +42,18 @@ export default function DashboardPage() {
   const todayStr = new Date().toLocaleDateString("en-CA");
 
   // Tìm bản ghi chấm công của hôm nay
-  const todayAttendance = attendances
-    .filter((a) => a.date === todayStr)
-    .sort((a, b) => (b.id || 0) - (a.id || 0))[0] || null;
+  const todayAttendance =
+    attendances
+      .filter((a) => a.date === todayStr || a.date?.startsWith(todayStr))
+      .sort((a, b) => (b.id || 0) - (a.id || 0))[0] || null;
 
   const hasCheckedIn = Boolean(todayAttendance?.checkIn);
   const hasCheckedOut = Boolean(todayAttendance?.checkOut);
+
+  // useEffect(() => {
+  //   setHasCheckedIn(Boolean(todayAttendance?.checkIn));
+  //   setHasCheckedOut(Boolean(todayAttendance?.checkOut));
+  // }, [todayAttendance]);
 
   // Tải dữ liệu ban đầu
   useEffect(() => {
@@ -66,7 +66,10 @@ export default function DashboardPage() {
         // Tải thông tin chấm công
         const attPromise = attendanceServices.getAttendance();
 
-        const [leaveData, attData] = await Promise.all([reqPromise, attPromise]);
+        const [leaveData, attData] = await Promise.all([
+          reqPromise,
+          attPromise,
+        ]);
 
         if (!isMounted) return;
 
@@ -130,13 +133,27 @@ export default function DashboardPage() {
   // Xử lý chấm công vào (Check-in)
   const handleCheckIn = async () => {
     try {
-      setIsActionLoading(true);
-      const res = await attendanceServices.checkIn();
-      toast.success("Chấm công vào thành công!");
-      setAttendances((prev) => [res, ...prev.filter((a) => a.id !== res.id)]);
+      // Nếu chưa chấm công thì mới được chấm công, nếu rồi thì không được chấm công nữa
+      if (!todayAttendance) {
+        setIsActionLoading(true);
+        const res = await attendanceServices.checkIn();
+        // setHasCheckedIn(true);
+        toast.success("Chấm công vào thành công!");
+
+        // Cập nhật bản ghi mới tạo từ backend vào state
+        if (res && res.id) {
+          setAttendances((prev) => [res, ...prev]);
+        } else {
+          return;
+        }
+      }
     } catch (error) {
       console.error("Lỗi khi chấm công vào:", error);
-      toast.error("Chấm công vào thất bại, vui lòng thử lại");
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Chấm công vào thất bại, vui lòng thử lại";
+      toast.error(errorMsg);
     } finally {
       setIsActionLoading(false);
     }
@@ -145,15 +162,36 @@ export default function DashboardPage() {
   // Xử lý chấm công ra (Check-out)
   const handleCheckOut = async () => {
     try {
-      setIsActionLoading(true);
-      const res = await attendanceServices.checkOut();
-      toast.success("Chấm công ra thành công!");
-      setAttendances((prev) =>
-        prev.map((item) => (item.id === res.id ? res : item))
-      );
+      // xem hôm nay đã checkin chưa, có rồi thì mới cho checkout
+      if (todayAttendance && hasCheckedIn) {
+        setIsActionLoading(true);
+        const isEnough8Hours = getWorkDuration(todayAttendance?.checkIn);
+        if (!isEnough8Hours) {
+          const confifmCheckOut = window.confirm(
+            "Bạn chưa làm đủ công! Bạn có chắc chắn muốn chần chấm công ra?",
+          );
+          if (confifmCheckOut) {
+            const res = await attendanceServices.checkOut();
+            // setHasCheckedOut(true);
+            toast.success("Chấm công ra thành công!");
+            // Cập nhật bản ghi mới tạo từ backend vào state
+            if (res && res.id) {
+              setAttendances((prev) => [res, ...prev]);
+            }
+          } else {
+            return;
+          }
+        }
+      } else {
+        return;
+      }
     } catch (error) {
       console.error("Lỗi khi chấm công ra:", error);
-      toast.error("Chấm công ra thất bại, vui lòng thử lại");
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Chấm công ra thất bại, vui lòng thử lại";
+      toast.error(errorMsg);
     } finally {
       setIsActionLoading(false);
     }
@@ -166,8 +204,8 @@ export default function DashboardPage() {
       toast.success(`Đã duyệt đơn nghỉ phép #${row.id}`);
       setRequests((prev) =>
         prev.map((item) =>
-          item.id === row.id ? { ...item, status: "approved" } : item
-        )
+          item.id === row.id ? { ...item, status: "approved" } : item,
+        ),
       );
     } catch (error) {
       console.error("Lỗi khi duyệt đơn:", error);
@@ -182,8 +220,8 @@ export default function DashboardPage() {
       toast.success(`Đã từ chối đơn nghỉ phép #${row.id}`);
       setRequests((prev) =>
         prev.map((item) =>
-          item.id === row.id ? { ...item, status: "rejected" } : item
-        )
+          item.id === row.id ? { ...item, status: "rejected" } : item,
+        ),
       );
     } catch (error) {
       console.error("Lỗi khi từ chối đơn:", error);
@@ -194,24 +232,91 @@ export default function DashboardPage() {
   // Thống kê nhanh đơn nghỉ
   const stats = {
     total: requests.length,
-    pending: requests.filter((r) => (r.status || "").toLowerCase() === "pending")
-      .length,
+    pending: requests.filter(
+      (r) => (r.status || "").toLowerCase() === "pending",
+    ).length,
     approved: requests.filter(
-      (r) => (r.status || "").toLowerCase() === "approved"
+      (r) => (r.status || "").toLowerCase() === "approved",
     ).length,
     rejected: requests.filter(
-      (r) => (r.status || "").toLowerCase() === "rejected"
+      (r) => (r.status || "").toLowerCase() === "rejected",
     ).length,
   };
 
+  const FILTER_LEAVE_REQUESTS = [
+    { id: "all", label: "Tất cả", count: stats.total },
+    {
+      id: "pending",
+      label: "Chờ duyệt",
+      count: stats.pending,
+      dot: "bg-attention",
+    },
+    {
+      id: "approved",
+      label: "Đã duyệt",
+      count: stats.approved,
+      dot: "bg-success",
+    },
+    {
+      id: "rejected",
+      label: "Từ chối",
+      count: stats.rejected,
+      dot: "bg-critical",
+    },
+  ];
+
   // Thống kê điểm danh hôm nay cho admin
   const todayAdminAttendanceCount = attendances.filter(
-    (a) => a.date === todayStr && a.checkIn
+    (a) => a.date === todayStr && a.checkIn,
   ).length;
+
+  const navigate = useNavigate();
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredRequests = requests.filter((r) => {
+    const status = (r.status || "").toLowerCase();
+    const matchStatus = statusFilter === "all" || status === statusFilter;
+    if (!matchStatus) return false;
+
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const emp = employeesMap[r.employeeId];
+    const empName = (emp?.fullName || "").toLowerCase();
+    const reason = (r.reason || "").toLowerCase();
+    const idStr = String(r.id);
+    return empName.includes(q) || reason.includes(q) || idStr.includes(q);
+  });
 
   if (!isAdmin && !isEmployee) {
     return <NotAuthorPage />;
   }
+
+  const emptyAction = (
+    <div>
+      {statusFilter !== "all" || searchQuery ? (
+        <button
+          type="button"
+          onClick={() => {
+            setStatusFilter("all");
+            setSearchQuery("");
+          }}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-hairline bg-canvas hover:bg-surface-soft text-ink text-xs font-medium transition-colors cursor-pointer"
+        >
+          Xóa bộ lọc
+        </button>
+      ) : isEmployee ? (
+        <button
+          type="button"
+          onClick={() => navigate("/leave-requests")}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary hover:bg-primary-deep text-white text-xs font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.98]"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Tạo đơn xin nghỉ phép</span>
+        </button>
+      ) : null}
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -219,37 +324,24 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
-              {isAdmin ? "Bảng điều khiển Quản trị viên" : "Bảng điều khiển Nhân viên"}
+            <h1 className="text-xl font-bold tracking-tight text-ink-deep">
+              {isAdmin
+                ? "Bảng điều khiển Quản trị viên"
+                : "Bảng điều khiển Nhân viên"}
             </h1>
 
             {/* Huy hiệu trạng thái chấm công nhanh dành cho nhân viên */}
             {isEmployee && (
-              <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
-                  hasCheckedIn
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-amber-50 text-amber-700 border-amber-200"
-                }`}
-              >
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    hasCheckedIn
-                      ? "bg-emerald-500 animate-pulse"
-                      : "bg-amber-500"
-                  }`}
-                />
-                {hasCheckedIn
-                  ? hasCheckedOut
-                    ? `Đã hoàn thành ca (${formatTime(todayAttendance.checkIn)} - ${formatTime(todayAttendance.checkOut)})`
-                    : `Đã chấm công (${formatTime(todayAttendance.checkIn)})`
-                  : "Chưa chấm công hôm nay"}
-              </span>
+              <AttendanceBadge
+                hasCheckedIn={hasCheckedIn}
+                hasCheckedOut={hasCheckedOut}
+                todayAttendance={todayAttendance}
+              />
             )}
           </div>
-          <p className="text-sm text-neutral-500 mt-1">
+          <p className="text-xs text-steel mt-1">
             Xin chào,{" "}
-            <span className="font-semibold text-neutral-700">
+            <span className="font-semibold text-ink">
               {profile?.fullName || profile?.username}
             </span>
             !{" "}
@@ -263,230 +355,219 @@ export default function DashboardPage() {
           type="button"
           onClick={handleRefresh}
           disabled={isRefreshing || isLoading}
-          className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium rounded-xl border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 active:bg-neutral-100 transition-colors shadow-xs self-start cursor-pointer disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium rounded-xl border border-hairline bg-canvas text-ink hover:bg-surface-soft active:scale-[0.98] transition-all shadow-2xs self-start cursor-pointer disabled:opacity-50"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+          <RefreshCw
+            className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-primary" : "text-steel"}`}
+          />
           <span>Làm mới</span>
         </button>
       </div>
 
       {/* KHỐI CHẤM CÔNG HÔM NAY DÀNH CHO NHÂN VIÊN */}
       {isEmployee && (
-        <div className="bg-gradient-to-br from-white to-neutral-50 border border-neutral-200/80 rounded-2xl p-5 sm:p-6 shadow-xs">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            {/* Cột trái: Thông tin ngày & Đồng hồ thời gian thực */}
-            <div className="flex items-start sm:items-center gap-4">
-              <div
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border ${
-                  hasCheckedIn
-                    ? "bg-emerald-500/10 text-emerald-600 border-emerald-200"
-                    : "bg-amber-500/10 text-amber-600 border-amber-200"
-                }`}
-              >
-                {hasCheckedIn ? (
-                  <CheckCircle2 className="w-7 h-7" />
-                ) : (
-                  <AlertCircle className="w-7 h-7" />
-                )}
-              </div>
+        <Attendance
+          hasCheckedIn={hasCheckedIn}
+          hasCheckedOut={hasCheckedOut}
+          currentTime={currentTime}
+          todayAttendance={todayAttendance}
+          isActionLoading={isActionLoading}
+          handleCheckIn={handleCheckIn}
+          handleCheckOut={handleCheckOut}
+        />
+      )}
 
-              <div>
-                <div className="flex items-center gap-2 text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-                  <CalendarDays className="w-3.5 h-3.5" />
-                  <span>
-                    {currentTime.toLocaleDateString("vi-VN", {
-                      weekday: "long",
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })}
-                  </span>
-                  <span className="text-neutral-300">•</span>
-                  <span className="font-mono text-neutral-700 font-bold">
-                    {currentTime.toLocaleTimeString("vi-VN")}
-                  </span>
-                </div>
-
-                <h3 className="text-lg font-bold text-neutral-900 mt-1">
-                  Trạng thái chấm công:{" "}
-                  {hasCheckedIn ? (
-                    <span className="text-emerald-600 font-semibold">
-                      {hasCheckedOut ? "Đã hoàn thành ca làm việc" : "Đã vào ca làm việc"}
-                    </span>
-                  ) : (
-                    <span className="text-amber-600 font-semibold">
-                      Chưa chấm công hôm nay
-                    </span>
-                  )}
-                </h3>
-
-                <p className="text-xs text-neutral-500 mt-0.5">
-                  {hasCheckedIn
-                    ? `Bắt đầu lúc: ${formatTime(todayAttendance.checkIn)} ${
-                        todayAttendance.checkOut
-                          ? `| Kết thúc lúc: ${formatTime(todayAttendance.checkOut)}`
-                          : "| Đang làm việc..."
-                      }`
-                    : "Hãy bấm nút chấm công bên cạnh để ghi nhận giờ vào ca hôm nay của bạn."}
-                </p>
-              </div>
-            </div>
-
-            {/* Cột phải: Khối thống kê giờ và Nút thao tác Chấm công */}
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-              {/* Thẻ giờ vào */}
-              <div className="bg-white border border-neutral-100 rounded-xl px-4 py-2.5 shadow-2xs">
-                <span className="text-[11px] font-medium text-neutral-400 uppercase block">
-                  Giờ vào ca
-                </span>
-                <span className="text-sm font-bold text-neutral-800 font-mono">
-                  {formatTime(todayAttendance?.checkIn)}
-                </span>
-              </div>
-
-              {/* Thẻ giờ ra */}
-              <div className="bg-white border border-neutral-100 rounded-xl px-4 py-2.5 shadow-2xs">
-                <span className="text-[11px] font-medium text-neutral-400 uppercase block">
-                  Giờ tan ca
-                </span>
-                <span className="text-sm font-bold text-neutral-800 font-mono">
-                  {formatTime(todayAttendance?.checkOut)}
-                </span>
-              </div>
-
-              {/* Nút hành động */}
-              {!hasCheckedIn ? (
-                <button
-                  type="button"
-                  onClick={handleCheckIn}
-                  disabled={isActionLoading}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-neutral-900 text-white font-medium text-xs hover:bg-neutral-800 active:bg-neutral-950 transition-all shadow-sm cursor-pointer disabled:opacity-50"
-                >
-                  <LogIn className="w-4 h-4" />
-                  <span>{isActionLoading ? "Đang xử lý..." : "Chấm công vào"}</span>
-                </button>
-              ) : !hasCheckedOut ? (
-                <button
-                  type="button"
-                  onClick={handleCheckOut}
-                  disabled={isActionLoading}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-amber-600 text-white font-medium text-xs hover:bg-amber-700 active:bg-amber-800 transition-all shadow-sm cursor-pointer disabled:opacity-50"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>{isActionLoading ? "Đang xử lý..." : "Chấm công ra (Check-out)"}</span>
-                </button>
+      {/* KHỐI CHỈ SỐ & TRẠNG THÁI PHÂN CẤP (Asymmetric Metric Layout - No Card Soup) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Thẻ chỉ số trọng tâm - 4/12 cột */}
+        <div className="lg:col-span-4 bg-canvas p-5 rounded-2xl border border-hairline-soft shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-stone uppercase tracking-wider">
+              {isAdmin ? "Điểm danh hôm nay" : "Tổng đơn nghỉ phép"}
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              {isAdmin ? (
+                <CalendarCheck className="w-4 h-4" />
               ) : (
-                <div className="inline-flex items-center gap-1.5 px-4 py-3 rounded-xl bg-emerald-100/70 text-emerald-800 text-xs font-semibold border border-emerald-200">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>Đã chấm công đủ ca</span>
-                </div>
+                <FileText className="w-4 h-4" />
               )}
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Thẻ thống kê */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {isAdmin ? (
-          <div className="bg-white p-5 rounded-2xl border border-neutral-100 shadow-xs flex items-center gap-4">
-            <div className="w-11 h-11 rounded-xl bg-neutral-100 flex items-center justify-center text-neutral-700">
-              <CalendarCheck className="w-5 h-5" />
+          <div className="mt-4">
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-extrabold text-ink-deep font-mono tabular-nums">
+                {isAdmin ? todayAdminAttendanceCount : stats.total}
+              </span>
+              <span className="text-xs text-steel">
+                {isAdmin ? "nhân viên có mặt" : "đơn trong hồ sơ"}
+              </span>
             </div>
-            <div>
-              <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                Điểm danh hôm nay
-              </p>
-              <p className="text-2xl font-bold text-neutral-900 mt-0.5">
-                {todayAdminAttendanceCount}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white p-5 rounded-2xl border border-neutral-100 shadow-xs flex items-center gap-4">
-            <div className="w-11 h-11 rounded-xl bg-neutral-100 flex items-center justify-center text-neutral-700">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                Đơn của tôi
-              </p>
-              <p className="text-2xl font-bold text-neutral-900 mt-0.5">
-                {stats.total}
-              </p>
-            </div>
-          </div>
-        )}
-
-        <div className="bg-white p-5 rounded-2xl border border-neutral-100 shadow-xs flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 border border-amber-100">
-            <Clock className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-amber-600/80 uppercase tracking-wider">
-              Chờ duyệt
-            </p>
-            <p className="text-2xl font-bold text-neutral-900 mt-0.5">
-              {stats.pending}
+            <p className="text-[11px] text-steel mt-1.5 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-success inline-block" />
+              {isAdmin
+                ? "Dữ liệu được cập nhật tự động theo thời gian thực"
+                : `Có ${stats.pending} đơn đang chờ người duyệt phản hồi`}
             </p>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-neutral-100 shadow-xs flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100">
-            <CheckCircle className="w-5 h-5" />
+        {/* Dải trạng thái xét duyệt tương tác (Interactive Workflow Strip) - 8/12 cột */}
+        <div className="lg:col-span-8 bg-canvas p-5 rounded-2xl border border-hairline-soft shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between border-b border-hairline-soft pb-2.5">
+            <span className="text-[11px] font-bold text-stone uppercase tracking-wider">
+              Tình trạng xét duyệt đơn nghỉ phép
+            </span>
+            <span className="text-xs text-steel font-medium">
+              Bấm vào từng mục để lọc nhanh bảng bên dưới
+            </span>
           </div>
-          <div>
-            <p className="text-xs font-medium text-emerald-600/80 uppercase tracking-wider">
-              Đã duyệt
-            </p>
-            <p className="text-2xl font-bold text-neutral-900 mt-0.5">
-              {stats.approved}
-            </p>
-          </div>
-        </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-neutral-100 shadow-xs flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600 border border-rose-100">
-            <XCircle className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-rose-600/80 uppercase tracking-wider">
-              Từ chối
-            </p>
-            <p className="text-2xl font-bold text-neutral-900 mt-0.5">
-              {stats.rejected}
-            </p>
+          <div className="grid grid-cols-3 gap-3 pt-3">
+            {/* Chờ duyệt */}
+            <button
+              type="button"
+              onClick={() =>
+                setStatusFilter(statusFilter === "pending" ? "all" : "pending")
+              }
+              className={cn(
+                "p-3 rounded-xl border text-left transition-all cursor-pointer active:scale-[0.98]",
+                statusFilter === "pending"
+                  ? "bg-attention/10 border-attention/50 ring-2 ring-attention/20"
+                  : "bg-surface-soft border-transparent hover:border-hairline",
+              )}
+            >
+              <div className="flex items-center gap-1.5 text-[#a06800]">
+                <span className="w-2 h-2 rounded-full bg-attention" />
+                <span className="text-xs font-semibold">Chờ duyệt</span>
+              </div>
+              <p className="text-2xl font-bold text-ink-deep font-mono tabular-nums mt-1">
+                {stats.pending}
+              </p>
+            </button>
+
+            {/* Đã duyệt */}
+            <button
+              type="button"
+              onClick={() =>
+                setStatusFilter(
+                  statusFilter === "approved" ? "all" : "approved",
+                )
+              }
+              className={cn(
+                "p-3 rounded-xl border text-left transition-all cursor-pointer active:scale-[0.98]",
+                statusFilter === "approved"
+                  ? "bg-success/10 border-success/50 ring-2 ring-success/20"
+                  : "bg-surface-soft border-transparent hover:border-hairline",
+              )}
+            >
+              <div className="flex items-center gap-1.5 text-[#227c37]">
+                <span className="w-2 h-2 rounded-full bg-success" />
+                <span className="text-xs font-semibold">Đã duyệt</span>
+              </div>
+              <p className="text-2xl font-bold text-ink-deep font-mono tabular-nums mt-1">
+                {stats.approved}
+              </p>
+            </button>
+
+            {/* Từ chối */}
+            <button
+              type="button"
+              onClick={() =>
+                setStatusFilter(
+                  statusFilter === "rejected" ? "all" : "rejected",
+                )
+              }
+              className={cn(
+                "p-3 rounded-xl border text-left transition-all cursor-pointer active:scale-[0.98]",
+                statusFilter === "rejected"
+                  ? "bg-critical/10 border-critical/50 ring-2 ring-critical/20"
+                  : "bg-surface-soft border-transparent hover:border-hairline",
+              )}
+            >
+              <div className="flex items-center gap-1.5 text-critical">
+                <span className="w-2 h-2 rounded-full bg-critical" />
+                <span className="text-xs font-semibold">Từ chối</span>
+              </div>
+              <p className="text-2xl font-bold text-ink-deep font-mono tabular-nums mt-1">
+                {stats.rejected}
+              </p>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Bảng danh sách đơn nghỉ phép */}
+      {/* Bảng danh sách đơn nghỉ phép với Filter Tabs & Search */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-2">
-            <CalendarCheck className="w-5 h-5 text-neutral-500" />
-            <h2 className="text-base font-semibold text-neutral-800">
-              {isAdmin ? "Danh sách đơn xin nghỉ phép gần đây" : "Đơn nghỉ phép của tôi"}
+            <CalendarCheck className="w-4.5 h-4.5 text-steel" />
+            <h2 className="text-sm font-bold text-ink-deep">
+              {isAdmin
+                ? "Danh sách đơn xin nghỉ phép"
+                : "Đơn nghỉ phép của tôi"}
             </h2>
           </div>
-          <span className="text-xs text-neutral-400">
-            {isAdmin ? "Hiển thị toàn bộ đơn xin nghỉ" : "Chỉ hiển thị đơn của bạn"}
-          </span>
+
+          {/* Ô tìm kiếm bảng danh sách */}
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Lọc theo nhân viên, lý do..."
+              className="w-full bg-canvas pl-9 pr-3 py-1.5 text-xs text-ink rounded-lg border border-hairline-soft focus:border-primary outline-none transition-all placeholder:text-stone shadow-2xs"
+            />
+          </div>
+        </div>
+
+        {/* Thanh Tab chuyển trạng thái (Interactive Filter Tabs) */}
+        <div className="flex items-center gap-1.5 p-1 bg-canvas border border-hairline-soft rounded-xl w-fit overflow-x-auto shadow-2xs">
+          {FILTER_LEAVE_REQUESTS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setStatusFilter(tab.id)}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap",
+                statusFilter === tab.id
+                  ? "bg-surface-soft text-ink-deep font-semibold shadow-2xs"
+                  : "text-steel hover:text-ink hover:bg-surface-soft/60",
+              )}
+            >
+              {tab.dot && (
+                <span className={cn("w-1.5 h-1.5 rounded-full", tab.dot)} />
+              )}
+              <span>{tab.label}</span>
+              <span
+                className={cn(
+                  "font-mono text-[11px] tabular-nums px-1.5 py-0.2 rounded-full",
+                  statusFilter === tab.id
+                    ? "bg-canvas text-ink-deep font-bold"
+                    : "text-stone",
+                )}
+              >
+                {tab.count}
+              </span>
+            </button>
+          ))}
         </div>
 
         <TableLeaveRequests
-          requests={requests}
+          requests={filteredRequests}
           isLoading={isLoading}
           isAdmin={isAdmin}
           employeesMap={employeesMap}
           onApprove={handleApprove}
           onReject={handleReject}
           emptyText={
-            isAdmin
-              ? "Hiện tại không có đơn xin nghỉ phép nào trong hệ thống."
-              : "Bạn chưa tạo đơn xin nghỉ phép nào."
+            statusFilter !== "all" || searchQuery
+              ? "Không tìm thấy đơn nào khớp với bộ lọc hiện tại."
+              : isAdmin
+                ? "Hiện tại không có đơn xin nghỉ phép nào trong hệ thống."
+                : "Bạn chưa tạo đơn xin nghỉ phép nào."
           }
+          emptyAction={emptyAction}
         />
       </div>
     </div>
