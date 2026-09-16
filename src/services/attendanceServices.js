@@ -1,9 +1,9 @@
 import api from "../utils/axios.js";
 
 export const attendanceServices = {
-  // Lấy danh sách điểm danh (nếu employee: chỉ của mình, nếu admin: toàn bộ)
-  getAttendance: async () => {
-    const res = await api.get("/api/attendance");
+  // Lấy danh sách điểm danh (nếu employee: chỉ của mình, nếu admin: toàn bộ hoặc lọc theo employeeId)
+  getAttendance: async (params) => {
+    const res = await api.get("/api/attendance", { params });
     return res.data;
   },
 
