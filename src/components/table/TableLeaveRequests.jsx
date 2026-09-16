@@ -1,18 +1,10 @@
 import Table from "./Table";
 import { Check, X, Calendar, Clock, User } from "lucide-react";
-import { formatDate } from "../../utils/formatTime.js"
+import { formatDate } from "../../utils/formatTime.js";
 
 /**
  * Component TableLeaveRequests
  * Dùng chung Table.jsx để hiển thị danh sách đơn xin nghỉ phép
- *
- * @param {Array} requests - Danh sách đơn xin nghỉ phép từ API
- * @param {boolean} isLoading - Trạng thái loading
- * @param {boolean} isAdmin - Quyền người dùng (nếu admin có thêm cột người gửi & nút duyệt)
- * @param {Object} employeesMap - Map lookup { [employeeId]: employeeObject } để hiển thị tên NV
- * @param {Function} onApprove - Callback khi admin duyệt đơn
- * @param {Function} onReject - Callback khi admin từ chối đơn
- * @param {string} emptyText - Thông báo khi không có đơn
  */
 export default function TableLeaveRequests({
   requests = [],
@@ -22,30 +14,31 @@ export default function TableLeaveRequests({
   onApprove,
   onReject,
   emptyText = "Không có đơn nghỉ phép nào",
+  emptyAction,
 }) {
-  // Trạng thái badge
+  // Trạng thái badge chuẩn tokens Meta
   const renderStatus = (status) => {
     const normalized = (status || "").toLowerCase();
     switch (normalized) {
       case "approved":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-success/10 text-[#227c37] border border-success/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-success"></span>
             Đã duyệt
           </span>
         );
       case "rejected":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-critical/10 text-critical border border-critical/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-critical"></span>
             Từ chối
           </span>
         );
       case "pending":
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-attention/10 text-[#a06800] border border-attention/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-attention"></span>
             Chờ duyệt
           </span>
         );
@@ -57,8 +50,12 @@ export default function TableLeaveRequests({
     {
       header: "Mã đơn",
       accessor: "id",
-      className: "w-20 font-semibold text-neutral-900",
-      render: (id) => <span className="text-neutral-500 font-mono text-xs">#{String(id).padStart(3, "0")}</span>,
+      className: "w-20",
+      render: (id) => (
+        <span className="text-steel font-mono text-xs font-medium">
+          #{String(id).padStart(3, "0")}
+        </span>
+      ),
     },
     // Nếu là Admin, hiển thị thông tin nhân viên gửi đơn
     ...(isAdmin
@@ -70,18 +67,18 @@ export default function TableLeaveRequests({
               const emp = employeesMap[employeeId];
               return (
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600 border border-neutral-200 font-medium text-xs">
+                  <div className="w-8 h-8 rounded-full bg-surface-soft text-slate flex items-center justify-center border border-hairline-soft font-bold text-xs">
                     {emp?.fullName ? (
                       emp.fullName.charAt(0).toUpperCase()
                     ) : (
-                      <User className="w-4 h-4 text-neutral-400" />
+                      <User className="w-4 h-4 text-stone" />
                     )}
                   </div>
                   <div>
-                    <p className="font-medium text-neutral-900 leading-tight">
+                    <p className="font-semibold text-ink-deep leading-tight text-xs">
                       {emp?.fullName || `Nhân viên #${employeeId}`}
                     </p>
-                    <p className="text-xs text-neutral-400 leading-tight">
+                    <p className="text-[11px] text-steel leading-tight mt-0.5">
                       {emp?.department ? `${emp.department} • ` : ""}ID: {employeeId}
                     </p>
                   </div>
@@ -94,11 +91,11 @@ export default function TableLeaveRequests({
     {
       header: "Thời gian nghỉ",
       render: (_, row) => (
-        <div className="flex items-center gap-1.5 text-xs text-neutral-700">
-          <Calendar className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-          <span className="font-medium text-neutral-800">{formatDate(row.fromDate)}</span>
-          <span className="text-neutral-400">&rarr;</span>
-          <span className="font-medium text-neutral-800">{formatDate(row.toDate)}</span>
+        <div className="flex items-center gap-1.5 text-xs text-ink">
+          <Calendar className="w-3.5 h-3.5 text-steel shrink-0" />
+          <span className="font-medium text-ink-deep">{formatDate(row.fromDate)}</span>
+          <span className="text-stone">&rarr;</span>
+          <span className="font-medium text-ink-deep">{formatDate(row.toDate)}</span>
         </div>
       ),
     },
@@ -107,8 +104,8 @@ export default function TableLeaveRequests({
       accessor: "reason",
       className: "max-w-xs",
       render: (reason) => (
-        <span className="text-neutral-600 block truncate max-w-xs" title={reason}>
-          {reason || <span className="text-neutral-300 italic">Không có lý do</span>}
+        <span className="text-slate block truncate max-w-xs text-xs" title={reason}>
+          {reason || <span className="text-stone italic">Không có lý do</span>}
         </span>
       ),
     },
@@ -116,8 +113,8 @@ export default function TableLeaveRequests({
       header: "Ngày gửi",
       accessor: "createdAt",
       render: (createdAt) => (
-        <div className="flex items-center gap-1 text-xs text-neutral-400">
-          <Clock className="w-3.5 h-3.5 text-neutral-300" />
+        <div className="flex items-center gap-1 text-xs text-steel">
+          <Clock className="w-3.5 h-3.5 text-stone" />
           <span>{formatDate(createdAt)}</span>
         </div>
       ),
@@ -138,7 +135,7 @@ export default function TableLeaveRequests({
               const isPending = (row.status || "").toLowerCase() === "pending";
 
               if (!isPending) {
-                return <span className="text-xs text-neutral-300">Đã xử lý</span>;
+                return <span className="text-xs text-stone">Đã xử lý</span>;
               }
 
               return (
@@ -146,7 +143,7 @@ export default function TableLeaveRequests({
                   <button
                     type="button"
                     onClick={() => onApprove?.(row)}
-                    className="p-1.5 text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer border border-emerald-200"
+                    className="p-1.5 text-[#227c37] hover:bg-success/20 bg-success/10 rounded-lg transition-colors cursor-pointer border border-success/30"
                     title="Duyệt đơn"
                   >
                     <Check className="w-3.5 h-3.5" />
@@ -154,7 +151,7 @@ export default function TableLeaveRequests({
                   <button
                     type="button"
                     onClick={() => onReject?.(row)}
-                    className="p-1.5 text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer border border-rose-200"
+                    className="p-1.5 text-critical hover:bg-critical/20 bg-critical/10 rounded-lg transition-colors cursor-pointer border border-critical/30"
                     title="Từ chối đơn"
                   >
                     <X className="w-3.5 h-3.5" />
@@ -173,6 +170,7 @@ export default function TableLeaveRequests({
       data={requests}
       isLoading={isLoading}
       emptyText={emptyText}
+      emptyAction={emptyAction}
       rowKey="id"
     />
   );

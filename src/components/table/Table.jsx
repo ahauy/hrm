@@ -27,6 +27,7 @@ export default function Table({
   rowKey = "id",
   isLoading = false,
   emptyText = "Không có dữ liệu",
+  emptyAction,
   pagination,
   className,
 }) {
@@ -39,7 +40,7 @@ export default function Table({
   return (
     <div
       className={cn(
-        "bg-white border border-neutral-100 rounded-2xl shadow-xs overflow-hidden",
+        "bg-canvas border border-hairline-soft rounded-2xl shadow-xs overflow-hidden",
         className
       )}
     >
@@ -48,7 +49,7 @@ export default function Table({
         <table className="w-full text-left border-collapse">
           {/* Header */}
           <thead>
-            <tr className="bg-neutral-50/80 border-b border-neutral-100">
+            <tr className="bg-surface-soft border-b border-hairline-soft">
               {columns.map((col, idx) => {
                 const alignClass =
                   col.align === "center"
@@ -61,7 +62,7 @@ export default function Table({
                   <th
                     key={col.accessor || idx}
                     className={cn(
-                      "px-6 py-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider",
+                      "px-6 py-3.5 text-[11px] font-bold text-slate uppercase tracking-wider",
                       alignClass,
                       col.className
                     )}
@@ -74,28 +75,35 @@ export default function Table({
           </thead>
 
           {/* Body */}
-          <tbody className="divide-y divide-neutral-100 text-sm text-neutral-700">
+          <tbody className="divide-y divide-hairline-soft text-sm text-ink">
             {isLoading ? (
               // Skeleton Loading Rows
               Array.from({ length: 5 }).map((_, rIdx) => (
                 <tr key={`skeleton-${rIdx}`} className="animate-pulse">
                   {columns.map((col, cIdx) => (
                     <td key={`skeleton-td-${cIdx}`} className="px-6 py-4">
-                      <div className="h-4 bg-neutral-200/70 rounded-md w-3/4"></div>
+                      <div className="h-4 bg-hairline-soft rounded-md w-3/4"></div>
                     </td>
                   ))}
                 </tr>
               ))
             ) : data.length === 0 ? (
-              // Empty State
+              // Actionable Empty State
               <tr>
                 <td
                   colSpan={columns.length || 1}
-                  className="px-6 py-12 text-center text-neutral-400"
+                  className="px-6 py-12 text-center text-steel"
                 >
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <Inbox className="w-8 h-8 stroke-1 text-neutral-300" />
-                    <span className="text-sm font-medium">{emptyText}</span>
+                  <div className="flex flex-col items-center justify-center gap-3 max-w-xs mx-auto">
+                    <div className="w-10 h-10 rounded-full bg-surface-soft border border-hairline-soft flex items-center justify-center text-stone">
+                      <Inbox className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-medium text-steel leading-relaxed">{emptyText}</span>
+                    {emptyAction && (
+                      <div className="pt-1">
+                        {emptyAction}
+                      </div>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -104,7 +112,7 @@ export default function Table({
               data.map((row, rowIndex) => (
                 <tr
                   key={getRowKey(row, rowIndex)}
-                  className="hover:bg-neutral-50/70 transition-colors"
+                  className="hover:bg-surface-soft/60 transition-colors"
                 >
                   {columns.map((col, colIndex) => {
                     const value = col.accessor ? row[col.accessor] : undefined;
@@ -139,18 +147,18 @@ export default function Table({
 
       {/* Pagination Bar */}
       {pagination && (
-        <div className="flex items-center justify-between px-6 py-4 border-t border-neutral-100 bg-neutral-50/40 text-xs text-neutral-500">
+        <div className="flex items-center justify-between px-6 py-3.5 border-t border-hairline-soft bg-surface-soft/40 text-xs text-steel">
           <div>
             Trang{" "}
-            <span className="font-semibold text-neutral-800">
+            <span className="font-semibold text-ink-deep">
               {pagination.currentPage || 1}
             </span>{" "}
             /{" "}
-            <span className="font-semibold text-neutral-800">
+            <span className="font-semibold text-ink-deep">
               {pagination.totalPages || 1}
             </span>
             {pagination.totalItems !== undefined && (
-              <span className="ml-1 text-neutral-400">
+              <span className="ml-1 text-stone">
                 ({pagination.totalItems} kết quả)
               </span>
             )}
@@ -163,7 +171,7 @@ export default function Table({
                 pagination.onPageChange?.(pagination.currentPage - 1)
               }
               disabled={pagination.currentPage <= 1}
-              className="p-1.5 rounded-lg border border-neutral-200 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg border border-hairline bg-canvas text-ink hover:bg-surface-soft disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
               aria-label="Trang trước"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -176,7 +184,7 @@ export default function Table({
               disabled={
                 pagination.currentPage >= (pagination.totalPages || 1)
               }
-              className="p-1.5 rounded-lg border border-neutral-200 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg border border-hairline bg-canvas text-ink hover:bg-surface-soft disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
               aria-label="Trang kế tiếp"
             >
               <ChevronRight className="w-4 h-4" />
