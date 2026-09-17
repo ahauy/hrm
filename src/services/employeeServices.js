@@ -12,4 +12,22 @@ export const employeeServices = {
     const res = await api.get(`/api/employees/${id}`);
     return res.data;
   },
+
+  // Tạo nhân viên mới (admin only)
+  createEmployee: async (data) => {
+    const res = await api.post("/api/employees", data);
+    return res.data;
+  },
+
+  // Cập nhật thông tin nhân viên (admin only)
+  updateEmployee: async (id, data) => {
+    const res = await api.put(`/api/employees/${id}`, data);
+    return res.data;
+  },
+
+  // Xóa nhân viên (admin only)
+  deleteEmployee: async (id) => {
+    const res = await api.delete(`/api/employees/${id}`);
+    return res.data;
+  },
 };
