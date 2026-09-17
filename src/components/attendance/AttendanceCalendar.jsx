@@ -227,24 +227,32 @@ export default function AttendanceCalendar({
           Quy chuẩn:
         </span>
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-success" />
+          <span className="w-2.5 h-2.5 rounded-full bg-success ring-2 ring-success/20" />
           <span className="text-ink font-medium">Đúng giờ (1.0)</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-attention" />
+          <span className="w-2.5 h-2.5 rounded-full bg-attention ring-2 ring-attention/20" />
           <span className="text-ink font-medium">Muộn ≤ 15p (1.0)</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-warning" />
+          <span className="w-2.5 h-2.5 rounded-full bg-warning ring-2 ring-warning/20" />
           <span className="text-ink font-medium">Muộn 15-60p (0.75)</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-primary" />
+          <span className="w-2.5 h-2.5 rounded-full bg-purple-500 ring-2 ring-purple-500/20" />
           <span className="text-ink font-medium">Nửa công / Muộn &gt; 60p (0.5)</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-critical" />
+          <span className="w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-primary/20 animate-pulse" />
+          <span className="text-ink font-medium">Đang trong ca</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-critical ring-2 ring-critical/20" />
           <span className="text-ink font-medium">Thiếu check-out (0 công)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-stone ring-2 ring-stone/20" />
+          <span className="text-ink font-medium">Vắng mặt</span>
         </div>
       </div>
 
@@ -284,6 +292,9 @@ export default function AttendanceCalendar({
             const isWeekend = data.isWeekend;
             const statusConfig = data.status;
 
+            // Xác định class nền và viền tùy theo tình huống chấm công
+            const hasCheckIn = Boolean(data.checkInTime);
+
             return (
               <div
                 key={cell.key}
@@ -306,35 +317,32 @@ export default function AttendanceCalendar({
                   "min-h-[90px] sm:min-h-[105px] p-2 sm:p-2.5 rounded-xl border flex flex-col justify-between text-left transition-all select-none relative",
                   isWeekend
                     ? "bg-surface-soft/40 border-hairline-soft/40 cursor-default"
-                    : "bg-canvas border-hairline-soft hover:border-primary/50 hover:shadow-xs cursor-pointer group",
+                    : hasCheckIn
+                    ? cn(
+                        statusConfig.bgClass || "bg-canvas",
+                        statusConfig.borderClass || "border-hairline-soft",
+                        "border-l-[3.5px]",
+                        statusConfig.borderLeftClass || "border-l-primary",
+                        "hover:shadow-xs cursor-pointer group"
+                      )
+                    : statusConfig.key === "ABSENT"
+                    ? "bg-stone/[0.04] border-hairline-soft border-l-[3px] border-l-stone/40 hover:bg-stone/[0.08] cursor-pointer group"
+                    : statusConfig.key === "NOT_CHECKED_IN"
+                    ? "bg-attention/[0.04] border-attention/30 hover:bg-attention/[0.08] cursor-pointer group"
+                    : "bg-canvas border-hairline-soft hover:border-hairline hover:shadow-xs cursor-pointer group",
                   isCurrentDay &&
-                    "ring-2 ring-primary/40 border-primary shadow-xs",
-                  data.checkInTime &&
-                    cn(
-                      "border-l-[3px]",
-                      isCurrentDay
-                        ? "border-l-primary"
-                        : data.status.key === "ON_TIME"
-                        ? "border-l-success"
-                        : data.status.key === "LATE_GRACE"
-                        ? "border-l-attention"
-                        : data.status.key === "LATE_PENALTY"
-                        ? "border-l-warning"
-                        : data.isMissingCheckout
-                        ? "border-l-critical"
-                        : "border-l-primary"
-                    )
+                    "ring-2 ring-primary/70 border-primary/50 shadow-xs"
                 )}
               >
                 {/* Dòng ngày & Badge số công */}
                 <div className="flex items-center justify-between gap-1">
                   <span
                     className={cn(
-                      "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono",
+                      "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono transition-transform group-hover:scale-105",
                       isCurrentDay
-                        ? "bg-primary text-white"
+                        ? "bg-primary text-white shadow-2xs"
                         : isWeekend
-                        ? "text-stone "
+                        ? "text-stone"
                         : "text-ink-deep"
                     )}
                   >
@@ -344,31 +352,47 @@ export default function AttendanceCalendar({
                   {data.credit > 0 ? (
                     <span
                       className={cn(
-                        "text-[10px] font-bold px-1.5 py-0.5 rounded-md border font-mono",
+                        "text-[10px] font-bold px-1.5 py-0.5 rounded-md border font-mono shadow-2xs",
                         statusConfig.badgeClass
                       )}
                     >
                       +{data.credit}
                     </span>
+                  ) : statusConfig.key === "IN_PROGRESS" ? (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-primary/15 text-primary border border-primary/30 font-mono shadow-2xs animate-pulse">
+                      Đang làm
+                    </span>
                   ) : data.isMissingCheckout ? (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-critical/15 text-critical border border-critical/30">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-critical/15 text-critical border border-critical/30 font-mono shadow-2xs">
+                      0 công
+                    </span>
+                  ) : statusConfig.key === "UNDER_HOURS" ? (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-critical/10 text-critical border border-critical/20 font-mono shadow-2xs">
                       0 công
                     </span>
                   ) : null}
                 </div>
 
-                {/* Nội dung chi tiết trong ô ngày (Typography sạch, không lặp icon thừa) */}
+                {/* Nội dung chi tiết trong ô ngày (Typography sạch, màu sắc chuẩn theo tình huống) */}
                 <div className="mt-1.5 flex-1 flex flex-col justify-end text-[11px]">
                   {data.checkInTime ? (
                     <div className="space-y-0.5">
                       <div className="font-mono tabular-nums text-[11px] font-bold text-ink-deep flex items-center justify-between">
-                        <span>{formatTime(data.checkInTime)}</span>
+                        <span
+                          className={cn(
+                            statusConfig.textColor || "text-ink-deep"
+                          )}
+                        >
+                          {formatTime(data.checkInTime)}
+                        </span>
                         <span className="text-stone/50 font-normal">→</span>
                         <span
                           className={cn(
                             data.isMissingCheckout
                               ? "text-critical font-bold"
-                              : "text-steel font-medium"
+                              : data.checkOutTime
+                              ? "text-steel font-medium"
+                              : "text-primary font-bold animate-pulse"
                           )}
                         >
                           {data.checkOutTime
@@ -386,7 +410,12 @@ export default function AttendanceCalendar({
                             statusConfig.dotClass
                           )}
                         />
-                        <span className="truncate text-[10px] font-medium text-steel">
+                        <span
+                          className={cn(
+                            "truncate text-[10px] font-semibold",
+                            statusConfig.textColor || "text-steel"
+                          )}
+                        >
                           {statusConfig.label}
                         </span>
                       </div>
@@ -396,13 +425,19 @@ export default function AttendanceCalendar({
                       Cuối tuần
                     </span>
                   ) : statusConfig.key === "ABSENT" ? (
-                    <span className="text-[10px] text-critical/80 font-medium">
-                      Vắng mặt
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-stone shrink-0" />
+                      <span className="text-[10px] text-stone font-medium">
+                        Vắng mặt
+                      </span>
+                    </div>
                   ) : statusConfig.key === "NOT_CHECKED_IN" ? (
-                    <span className="text-[10px] text-attention font-medium">
-                      Chưa chấm
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-attention shrink-0" />
+                      <span className="text-[10px] text-attention font-medium">
+                        Chưa chấm
+                      </span>
+                    </div>
                   ) : null}
                 </div>
               </div>
