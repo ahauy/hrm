@@ -55,7 +55,12 @@ export function useAttendanceAction({
   // 5. Xử lý Chấm công vào (Check-in)
   const handleCheckIn = useCallback(async () => {
     if (isBusy) return;
-    if (todayAttendance && hasCheckedIn) return;
+    if (todayAttendance && hasCheckedIn) {
+      if (hasCheckedOut) {
+        toast.info("Hôm nay bạn đã hoàn thành ca làm việc và check-out.");
+      }
+      return;
+    }
     try {
       setIsActionLoading(true);
       const res = await attendanceServices.checkIn();
@@ -76,7 +81,7 @@ export function useAttendanceAction({
     } finally {
       setIsActionLoading(false);
     }
-  }, [isBusy, todayAttendance, hasCheckedIn, setAttendances, onReload]);
+  }, [isBusy, todayAttendance, hasCheckedIn, hasCheckedOut, setAttendances, onReload]);
 
   // 6. Xử lý Chấm công ra (Check-out)
   const handleCheckOut = useCallback(async () => {
@@ -86,7 +91,7 @@ export function useAttendanceAction({
     const duration = getWorkDuration(todayAttendance.checkIn);
     if (!duration.isEnough8Hours) {
       const confirm = window.confirm(
-        "Bạn chưa làm đủ công! Bạn có chắc chắn muốn chấm công ra?"
+        `Bạn chưa làm đủ 8 giờ công chuẩn (mới đạt ${duration.durationText} thực tế, còn thiếu ${duration.shortageText})! Bạn có chắc chắn muốn chấm công ra?`
       );
       if (!confirm) {
         return;
