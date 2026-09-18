@@ -4,6 +4,7 @@ import { useAuth } from "../hooks/useAuth.js";
 import { useLeaveRequests } from "../hooks/useLeaveRequests.js";
 import { attendanceServices } from "../services/attendanceServices.js";
 import { useAttendanceAction } from "../hooks/useAttendanceAction.js";
+import { usePagination } from "../hooks/usePagination.js";
 import NotAuthorPage from "./NotAuthorPage.jsx";
 import TableLeaveRequests from "../components/table/TableLeaveRequests.jsx";
 import AttendanceBadge from "../components/attendance/AttendanceBadge.jsx";
@@ -12,6 +13,8 @@ import SearchInput from "../components/common/SearchInput.jsx";
 import { FileText, RefreshCw, CalendarCheck, Plus } from "lucide-react";
 import { cn } from "../utils/cn.js";
 import { toast } from "sonner";
+
+const LEAVE_PAGE_SIZE = 8;
 
 export default function DashboardPage() {
   const { profile, isAdmin, isEmployee } = useAuth();
@@ -145,6 +148,24 @@ export default function DashboardPage() {
     });
   }, [requests, statusFilter, searchQuery, employeesMap]);
 
+  // Quản lý phân trang cho danh sách đơn nghỉ phép trên dashboard
+  const {
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    paginatedData: paginatedRequests,
+  } = usePagination(filteredRequests, LEAVE_PAGE_SIZE);
+
+  const handleStatusFilterChange = (newStatus) => {
+    setStatusFilter(newStatus);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
   if (!isAdmin && !isEmployee) {
     return <NotAuthorPage />;
   }
@@ -157,6 +178,7 @@ export default function DashboardPage() {
           onClick={() => {
             setStatusFilter("all");
             setSearchQuery("");
+            setCurrentPage(1);
           }}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-hairline bg-canvas hover:bg-surface-soft text-ink text-xs font-medium transition-colors cursor-pointer"
         >
@@ -274,7 +296,9 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() =>
-                setStatusFilter(statusFilter === "pending" ? "all" : "pending")
+                handleStatusFilterChange(
+                  statusFilter === "pending" ? "all" : "pending",
+                )
               }
               className={cn(
                 "p-3 rounded-xl border text-left transition-all cursor-pointer active:scale-[0.98]",
@@ -296,7 +320,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() =>
-                setStatusFilter(
+                handleStatusFilterChange(
                   statusFilter === "approved" ? "all" : "approved",
                 )
               }
@@ -320,7 +344,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() =>
-                setStatusFilter(
+                handleStatusFilterChange(
                   statusFilter === "rejected" ? "all" : "rejected",
                 )
               }
@@ -358,9 +382,13 @@ export default function DashboardPage() {
           {/* Ô tìm kiếm bảng danh sách dùng chung SearchInput */}
           <SearchInput
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Lọc theo nhân viên, lý do..."
-            containerClassName="w-full sm:w-64 max-w-none"
+            onChange={handleSearchChange}
+            placeholder={
+              isAdmin
+                ? "Lọc theo nhân viên, lý do..."
+                : "Lọc theo lý do, mã đơn..."
+            }
+            containerClassName="w-full sm:w-72 max-w-none"
           />
         </div>
 
@@ -370,7 +398,7 @@ export default function DashboardPage() {
             <button
               key={tab.id}
               type="button"
-              onClick={() => setStatusFilter(tab.id)}
+              onClick={() => handleStatusFilterChange(tab.id)}
               className={cn(
                 "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap",
                 statusFilter === tab.id
@@ -397,7 +425,7 @@ export default function DashboardPage() {
         </div>
 
         <TableLeaveRequests
-          requests={filteredRequests}
+          requests={paginatedRequests}
           isLoading={isLoading}
           isAdmin={isAdmin}
           employeesMap={employeesMap}
@@ -411,6 +439,16 @@ export default function DashboardPage() {
                 : "Bạn chưa tạo đơn xin nghỉ phép nào."
           }
           emptyAction={emptyAction}
+          pagination={
+            filteredRequests.length > 0
+              ? {
+                  currentPage,
+                  totalPages,
+                  totalItems: filteredRequests.length,
+                  onPageChange: (newPage) => setCurrentPage(newPage),
+                }
+              : undefined
+          }
         />
       </div>
     </div>

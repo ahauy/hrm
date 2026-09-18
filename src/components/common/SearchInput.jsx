@@ -36,14 +36,14 @@ export default function SearchInput({
 
   return (
     <div className={cn("relative flex-1 max-w-md", containerClassName)}>
-      <Search className="w-4 h-4 text-stone absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      <Search className="w-4 h-4 text-steel absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors" />
       <input
         type="text"
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
         className={cn(
-          "w-full pl-9.5 pr-8 py-2 text-xs rounded-xl border border-hairline-soft bg-surface-soft/40 focus:bg-canvas focus:border-primary focus:outline-none transition-all placeholder:text-stone text-ink-deep shadow-2xs",
+          "w-full pl-9.5 pr-8 py-2 text-xs rounded-xl border border-hairline bg-canvas text-ink-deep hover:border-steel/60 focus:bg-canvas focus:border-primary focus:ring-2 focus:ring-primary/15 focus:outline-none transition-all placeholder:text-stone shadow-2xs font-normal",
           className
         )}
       />
