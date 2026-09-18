@@ -35,14 +35,25 @@ export function getWorkDuration(checkIn, checkOut) {
       durationText: "0h 00m",
       isEnough8Hours: false,
       shortageText: "8h 00m",
+      lunchDeduction: 0,
     };
   }
 
-  const startTime = new Date(checkIn).getTime();
-  const endTime = checkOut ? new Date(checkOut).getTime() : Date.now();
+  const checkInDate = new Date(checkIn);
+  const checkOutDate = checkOut ? new Date(checkOut) : new Date();
 
-  const diffMs = Math.max(0, endTime - startTime);
-  const totalMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffMs = Math.max(0, checkOutDate.getTime() - checkInDate.getTime());
+  const elapsedMinutes = Math.floor(diffMs / (1000 * 60));
+
+  // Trừ 90 phút nghỉ trưa (12:00 - 13:30 = 720 - 810 phút trong ngày)
+  const inMinutes = checkInDate.getHours() * 60 + checkInDate.getMinutes();
+  const outMinutes = checkOutDate.getHours() * 60 + checkOutDate.getMinutes();
+  const lunchOverlap = Math.max(
+    0,
+    Math.min(outMinutes, 810) - Math.max(inMinutes, 720)
+  );
+
+  const totalMinutes = Math.max(0, elapsedMinutes - lunchOverlap);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
 
@@ -62,5 +73,6 @@ export function getWorkDuration(checkIn, checkOut) {
     durationText,
     isEnough8Hours,
     shortageText,
+    lunchDeduction: lunchOverlap,
   };
 }
