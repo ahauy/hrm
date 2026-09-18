@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "../validators/auth.validator";
-import { useAuthStore } from "../stores/useAuthStore";
+import { useAuth } from "../hooks/useAuth.js";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -10,6 +10,8 @@ import { User, EyeOff, Loader, Eye, Lock } from "lucide-react";
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const {
     register,
@@ -23,17 +25,13 @@ const LoginPage = () => {
     },
   });
 
-  const login = useAuthStore((state) => state.login);
-  const navigate = useNavigate();
-
   const onSubmit = async (data) => {
     try {
       setIsLoading(true);
       await login(data);
       toast.success("Đăng nhập thành công!");
       navigate("/dashboard");
-    } catch (error) {
-      console.log("Error in LoginPage.onSubmit:", error);
+    } catch {
       toast.error("Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin.");
     } finally {
       setIsLoading(false);
