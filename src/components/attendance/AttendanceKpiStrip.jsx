@@ -24,8 +24,8 @@ export default function AttendanceKpiStrip({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      {/* Cột trái (5/12): Thẻ trọng tâm hiệu suất công ty */}
-      <div className="lg:col-span-5 bg-canvas border border-hairline-soft rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+      {/* Cột trái (4/12): Thẻ trọng tâm hiệu suất công ty */}
+      <div className="lg:col-span-4 bg-canvas border border-hairline-soft rounded-2xl p-5 shadow-xs flex flex-col justify-between">
         <div className="flex items-start justify-between gap-3">
           <div>
             <span className="text-[11px] font-bold text-stone uppercase tracking-wider block">
@@ -55,8 +55,8 @@ export default function AttendanceKpiStrip({
         </div>
       </div>
 
-      {/* Cột phải (7/12): Dải thẻ tương tác trực tiếp (Interactive Exception Strip) */}
-      <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* Cột phải (8/12): Dải thẻ tương tác trực tiếp (Interactive Exception Strip) */}
+      <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-2.5">
         {/* Thẻ 1: Lượt đi muộn */}
         <div
           role="button"
@@ -69,24 +69,24 @@ export default function AttendanceKpiStrip({
             }
           }}
           className={cn(
-            "p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between select-none active:scale-[0.98]",
+            "p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between select-none active:scale-[0.98]",
             activeTab === "late"
-              ? "bg-attention/15 border-attention shadow-xs ring-1 ring-attention"
-              : "bg-canvas border-hairline-soft hover:border-attention/60"
+              ? "bg-amber-500/15 border-amber-500 shadow-xs ring-1 ring-amber-500"
+              : "bg-canvas border-hairline-soft hover:border-amber-500/60"
           )}
         >
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-stone uppercase tracking-wider">
-              Lượt đi muộn
+              Đi muộn
             </span>
-            <span className="w-2 h-2 rounded-full bg-attention" />
+            <span className="w-2 h-2 rounded-full bg-amber-500" />
           </div>
           <div className="mt-2">
-            <span className="text-2xl font-black text-attention font-mono tabular-nums">
+            <span className="text-2xl font-black text-amber-800 font-mono tabular-nums">
               {companySummary.totalLateIncidents}
             </span>
-            <span className="text-[11px] text-steel block mt-0.5">
-              {activeTab === "late" ? "Đang lọc • Bấm để hủy" : "Bấm để lọc danh sách"}
+            <span className="text-[10px] text-steel block mt-0.5 truncate">
+              {activeTab === "late" ? "Đang lọc" : "Lọc danh sách"}
             </span>
           </div>
         </div>
@@ -103,29 +103,97 @@ export default function AttendanceKpiStrip({
             }
           }}
           className={cn(
-            "p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between select-none active:scale-[0.98]",
+            "p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between select-none active:scale-[0.98]",
             activeTab === "missing"
-              ? "bg-critical/15 border-critical shadow-xs ring-1 ring-critical"
-              : "bg-canvas border-hairline-soft hover:border-critical/60"
+              ? "bg-rose-500/15 border-rose-500 shadow-xs ring-1 ring-rose-500"
+              : "bg-canvas border-hairline-soft hover:border-rose-500/60"
           )}
         >
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-stone uppercase tracking-wider">
-              Quên Check-out
+              Thiếu Out
             </span>
-            <span className="w-2 h-2 rounded-full bg-critical" />
+            <span className="w-2 h-2 rounded-full bg-rose-600" />
           </div>
           <div className="mt-2">
-            <span className="text-2xl font-black text-critical font-mono tabular-nums">
+            <span className="text-2xl font-black text-rose-700 font-mono tabular-nums">
               {companySummary.totalMissingCheckOut}
             </span>
-            <span className="text-[11px] text-steel block mt-0.5">
-              {activeTab === "missing" ? "Đang lọc • Bấm để hủy" : "Bấm để lọc danh sách"}
+            <span className="text-[10px] text-steel block mt-0.5 truncate">
+              {activeTab === "missing" ? "Đang lọc" : "Lọc danh sách"}
             </span>
           </div>
         </div>
 
-        {/* Thẻ 3: Đạt chuẩn công */}
+        {/* Thẻ 3: Thiếu giờ (< 4h) */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => onTabChange(activeTab === "under_hours" ? "all" : "under_hours")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onTabChange(activeTab === "under_hours" ? "all" : "under_hours");
+            }
+          }}
+          className={cn(
+            "p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between select-none active:scale-[0.98]",
+            activeTab === "under_hours"
+              ? "bg-fuchsia-500/15 border-fuchsia-500 shadow-xs ring-1 ring-fuchsia-500"
+              : "bg-canvas border-hairline-soft hover:border-fuchsia-500/60"
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-stone uppercase tracking-wider">
+              Thiếu giờ
+            </span>
+            <span className="w-2 h-2 rounded-full bg-fuchsia-600" />
+          </div>
+          <div className="mt-2">
+            <span className="text-2xl font-black text-fuchsia-800 font-mono tabular-nums">
+              {companySummary.totalUnderHours || 0}
+            </span>
+            <span className="text-[10px] text-steel block mt-0.5 truncate">
+              {activeTab === "under_hours" ? "Đang lọc" : "Lọc danh sách"}
+            </span>
+          </div>
+        </div>
+
+        {/* Thẻ 4: Vắng mặt */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => onTabChange(activeTab === "absent" ? "all" : "absent")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onTabChange(activeTab === "absent" ? "all" : "absent");
+            }
+          }}
+          className={cn(
+            "p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between select-none active:scale-[0.98]",
+            activeTab === "absent"
+              ? "bg-slate-200/60 border-slate-400 shadow-xs ring-1 ring-slate-400"
+              : "bg-canvas border-hairline-soft hover:border-slate-400/60"
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-stone uppercase tracking-wider">
+              Vắng mặt
+            </span>
+            <span className="w-2 h-2 rounded-full bg-slate-500" />
+          </div>
+          <div className="mt-2">
+            <span className="text-2xl font-black text-slate-700 font-mono tabular-nums">
+              {companySummary.totalAbsentDays || 0}
+            </span>
+            <span className="text-[10px] text-steel block mt-0.5 truncate">
+              {activeTab === "absent" ? "Đang lọc" : "Lọc danh sách"}
+            </span>
+          </div>
+        </div>
+
+        {/* Thẻ 5: Đạt chuẩn công */}
         <div
           role="button"
           tabIndex={0}
@@ -137,24 +205,24 @@ export default function AttendanceKpiStrip({
             }
           }}
           className={cn(
-            "p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between select-none active:scale-[0.98]",
+            "p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between select-none active:scale-[0.98] col-span-2 sm:col-span-1",
             activeTab === "full"
-              ? "bg-success/15 border-success shadow-xs ring-1 ring-success"
-              : "bg-canvas border-hairline-soft hover:border-success/60"
+              ? "bg-emerald-500/15 border-emerald-500 shadow-xs ring-1 ring-emerald-500"
+              : "bg-canvas border-hairline-soft hover:border-emerald-500/60"
           )}
         >
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-stone uppercase tracking-wider">
-              Đạt chuẩn công
+              Đạt chuẩn
             </span>
-            <span className="w-2 h-2 rounded-full bg-success" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
           </div>
           <div className="mt-2">
-            <span className="text-2xl font-black text-success font-mono tabular-nums">
+            <span className="text-2xl font-black text-emerald-700 font-mono tabular-nums">
               {fullComplianceCount}
             </span>
-            <span className="text-[11px] text-steel block mt-0.5">
-              {activeTab === "full" ? "Đang lọc • Bấm để hủy" : "Bấm để lọc danh sách"}
+            <span className="text-[10px] text-steel block mt-0.5 truncate">
+              {activeTab === "full" ? "Đang lọc" : "Lọc danh sách"}
             </span>
           </div>
         </div>

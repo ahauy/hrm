@@ -150,6 +150,12 @@ export default function AdminAttendanceTable({
       if (activeTab === "missing") {
         return item.stats.missingCheckOutDays > 0;
       }
+      if (activeTab === "under_hours") {
+        return (item.stats.underHoursDays || 0) > 0;
+      }
+      if (activeTab === "absent") {
+        return (item.stats.absentDays || 0) > 0;
+      }
       if (activeTab === "full") {
         return item.stats.totalWorkUnits >= item.stats.standardWorkDays;
       }
@@ -185,6 +191,14 @@ export default function AdminAttendanceTable({
           valA = a.stats.missingCheckOutDays;
           valB = b.stats.missingCheckOutDays;
           break;
+        case "underHours":
+          valA = a.stats.underHoursDays || 0;
+          valB = b.stats.underHoursDays || 0;
+          break;
+        case "absent":
+          valA = a.stats.absentDays || 0;
+          valB = b.stats.absentDays || 0;
+          break;
         case "totalUnits":
         default:
           valA = a.stats.totalWorkUnits;
@@ -202,11 +216,15 @@ export default function AdminAttendanceTable({
   const companySummary = useMemo(() => {
     let totalLateIncidents = 0;
     let totalMissingCheckOut = 0;
+    let totalUnderHours = 0;
+    let totalAbsentDays = 0;
     let totalWorkedUnitsCompany = 0;
 
     employeesWithStats.forEach((emp) => {
       totalLateIncidents += emp.stats.lateDays;
       totalMissingCheckOut += emp.stats.missingCheckOutDays;
+      totalUnderHours += emp.stats.underHoursDays || 0;
+      totalAbsentDays += emp.stats.absentDays || 0;
       totalWorkedUnitsCompany += emp.stats.totalWorkUnits;
     });
 
@@ -217,6 +235,8 @@ export default function AdminAttendanceTable({
       totalStaff: employees.length,
       totalLateIncidents,
       totalMissingCheckOut,
+      totalUnderHours,
+      totalAbsentDays,
       avgUnitsPerStaff,
     };
   }, [employeesWithStats, employees.length]);
@@ -239,7 +259,7 @@ export default function AdminAttendanceTable({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 w-full min-w-0">
       {/* 1. Cụm thẻ hiệu suất & dải ngoại lệ tương tác */}
       <AttendanceKpiStrip
         companySummary={companySummary}
@@ -326,11 +346,11 @@ export default function AdminAttendanceTable({
               className={cn(
                 "px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer flex items-center gap-1.5",
                 activeTab === "late"
-                  ? "bg-attention text-ink-deep font-bold shadow-2xs"
+                  ? "bg-amber-500 text-white font-bold shadow-2xs"
                   : "bg-surface-soft text-steel hover:text-ink hover:bg-surface-soft/80"
               )}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-attention" />
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
               Có đi muộn ({employeesWithStats.filter((e) => e.stats.lateDays > 0).length})
             </button>
 
@@ -340,12 +360,40 @@ export default function AdminAttendanceTable({
               className={cn(
                 "px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer flex items-center gap-1.5",
                 activeTab === "missing"
-                  ? "bg-critical text-white shadow-2xs"
+                  ? "bg-rose-600 text-white shadow-2xs font-bold"
                   : "bg-surface-soft text-steel hover:text-ink hover:bg-surface-soft/80"
               )}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-critical" />
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
               Thiếu check-out ({employeesWithStats.filter((e) => e.stats.missingCheckOutDays > 0).length})
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("under_hours")}
+              className={cn(
+                "px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+                activeTab === "under_hours"
+                  ? "bg-fuchsia-600 text-white shadow-2xs font-bold"
+                  : "bg-surface-soft text-steel hover:text-ink hover:bg-surface-soft/80"
+              )}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-600" />
+              Thiếu giờ ({employeesWithStats.filter((e) => (e.stats.underHoursDays || 0) > 0).length})
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("absent")}
+              className={cn(
+                "px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+                activeTab === "absent"
+                  ? "bg-slate-600 text-white shadow-2xs font-bold"
+                  : "bg-surface-soft text-steel hover:text-ink hover:bg-surface-soft/80"
+              )}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+              Có vắng ({employeesWithStats.filter((e) => (e.stats.absentDays || 0) > 0).length})
             </button>
 
             <button
@@ -354,11 +402,11 @@ export default function AdminAttendanceTable({
               className={cn(
                 "px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer flex items-center gap-1.5",
                 activeTab === "full"
-                  ? "bg-success text-white shadow-2xs"
+                  ? "bg-emerald-600 text-white shadow-2xs font-bold"
                   : "bg-surface-soft text-steel hover:text-ink hover:bg-surface-soft/80"
               )}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-success" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               Đạt chuẩn công ({fullComplianceCount})
             </button>
           </div>
@@ -373,7 +421,7 @@ export default function AdminAttendanceTable({
       </div>
 
       {/* 3. Bảng Dữ Liệu: Hỗ trợ Chế độ Lưới theo ngày hoặc Danh sách tổng hợp */}
-      <div className="bg-canvas border border-hairline-soft rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-canvas border border-hairline-soft rounded-2xl shadow-xs overflow-hidden w-full min-w-0">
         {viewMode === "matrix" ? (
           <AttendanceMatrixView
             employees={sortedAndFilteredEmployees}

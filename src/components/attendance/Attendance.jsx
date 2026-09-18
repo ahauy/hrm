@@ -8,6 +8,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { formatTime, getWorkDuration } from "../../utils/formatTime";
+import { cn } from "../../utils/cn";
 
 export default function Attendance({
   hasCheckedIn,
@@ -33,13 +34,15 @@ export default function Attendance({
 
   // Cấu hình trạng thái
   let stateConfig = {
-    iconBg: "bg-attention/10 text-attention border-attention/30",
+    iconBg: "bg-teal-500/10 text-teal-700 border-teal-500/30",
     Icon: AlertCircle,
     statusText: "Chưa chấm công",
-    statusColor: "text-attention",
+    statusColor: "text-teal-700",
     description:
       "Ghi nhận giờ vào ca hôm nay để bắt đầu tính công làm việc.",
   };
+
+  const isPastShift = now.getHours() >= 18;
 
   if (isBusy && !todayAttendance) {
     stateConfig = {
@@ -50,32 +53,44 @@ export default function Attendance({
       description: "Đang kiểm tra trạng thái chấm công hôm nay của bạn...",
     };
   } else if (hasCheckedIn && !hasCheckedOut) {
-    stateConfig = {
-      iconBg: "bg-primary/10 text-primary border-primary/30",
-      Icon: Clock,
-      statusText: "Đang trong ca làm",
-      statusColor: "text-primary",
-      description: `Bắt đầu lúc: ${formatTime(
-        todayAttendance?.checkIn
-      )} • Ca làm việc đang diễn ra...`,
-    };
+    if (isPastShift) {
+      stateConfig = {
+        iconBg: "bg-rose-500/15 text-rose-700 border-rose-500/30",
+        Icon: AlertTriangle,
+        statusText: "Quá giờ chưa Check-out",
+        statusColor: "text-rose-700 font-bold",
+        description: `Bắt đầu lúc: ${formatTime(
+          todayAttendance?.checkIn
+        )} • Đã hết giờ ca chuẩn (18:00). Bạn chưa check-out, vui lòng bấm Chấm công ra ngay!`,
+      };
+    } else {
+      stateConfig = {
+        iconBg: "bg-blue-500/10 text-blue-700 border-blue-500/30",
+        Icon: Clock,
+        statusText: "Đang trong ca làm",
+        statusColor: "text-blue-700 font-semibold",
+        description: `Bắt đầu lúc: ${formatTime(
+          todayAttendance?.checkIn
+        )} • Ca làm việc đang diễn ra...`,
+      };
+    }
   } else if (hasCheckedIn && hasCheckedOut) {
     if (duration.isEnough8Hours) {
       stateConfig = {
-        iconBg: "bg-success/10 text-success border-success/30",
+        iconBg: "bg-emerald-500/10 text-emerald-700 border-emerald-500/30",
         Icon: CheckCircle2,
         statusText: "Làm đủ công",
-        statusColor: "text-success",
+        statusColor: "text-emerald-700 font-semibold",
         description: `Giờ vào: ${formatTime(
           todayAttendance?.checkIn
         )} • Giờ ra: ${formatTime(todayAttendance?.checkOut)}`,
       };
     } else {
       stateConfig = {
-        iconBg: "bg-critical/10 text-critical border-critical/30",
+        iconBg: "bg-fuchsia-500/10 text-fuchsia-800 border-fuchsia-500/30",
         Icon: AlertTriangle,
         statusText: "Làm thiếu công",
-        statusColor: "text-critical",
+        statusColor: "text-fuchsia-800 font-semibold",
         description: `Giờ vào: ${formatTime(
           todayAttendance?.checkIn
         )} • Giờ ra: ${formatTime(todayAttendance?.checkOut)}`,
@@ -177,11 +192,16 @@ export default function Attendance({
               type="button"
               onClick={handleCheckOut}
               disabled={isBusy}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-primary text-primary hover:bg-primary/5 active:scale-[0.98] font-semibold text-xs transition-all shadow-2xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className={cn(
+                "inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
+                isPastShift
+                  ? "bg-rose-600 hover:bg-rose-700 text-white shadow-xs animate-pulse"
+                  : "border-2 border-primary text-primary hover:bg-primary/5 active:scale-[0.98] shadow-2xs"
+              )}
             >
               {isBusy ? (
                 <>
-                  <span className="w-3.5 h-3.5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   <span>
                     {isActionLoading ? "Đang xử lý..." : "Đang kiểm tra..."}
                   </span>
@@ -189,19 +209,23 @@ export default function Attendance({
               ) : (
                 <>
                   <LogOut className="w-4 h-4" />
-                  <span>Chấm công ra (Check-out)</span>
+                  <span>
+                    {isPastShift
+                      ? "Chấm công ra ngay (Quá giờ)"
+                      : "Chấm công ra (Check-out)"}
+                  </span>
                 </>
               )}
             </button>
           ) : (
             <div className="flex flex-wrap items-center gap-2.5">
               {duration.isEnough8Hours ? (
-                <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-success/10 text-success text-xs font-semibold border border-success/30 shadow-2xs">
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/10 text-emerald-700 text-xs font-semibold border border-emerald-500/30 shadow-2xs">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Đã hoàn thành công</span>
                 </div>
               ) : (
-                <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-critical/10 text-critical text-xs font-semibold border border-critical/30 shadow-2xs">
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-fuchsia-500/10 text-fuchsia-800 text-xs font-semibold border border-fuchsia-500/30 shadow-2xs">
                   <AlertTriangle className="w-4 h-4" />
                   <span>Thiếu giờ công</span>
                 </div>

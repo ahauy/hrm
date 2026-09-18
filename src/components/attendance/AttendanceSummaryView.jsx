@@ -17,7 +17,7 @@ export default function AttendanceSummaryView({
   onSelectDayModal,
 }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto w-full">
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="border-b border-hairline-soft bg-surface-soft/60 text-[11px] font-bold text-stone uppercase tracking-wider select-none">
@@ -70,6 +70,24 @@ export default function AttendanceSummaryView({
               </div>
             </th>
             <th
+              onClick={() => onSort("underHours")}
+              className="py-3.5 px-4 text-center cursor-pointer hover:text-ink transition-colors"
+            >
+              <div className="flex items-center justify-center">
+                <span>Thiếu giờ</span>
+                {renderSortIcon("underHours")}
+              </div>
+            </th>
+            <th
+              onClick={() => onSort("absent")}
+              className="py-3.5 px-4 text-center cursor-pointer hover:text-ink transition-colors"
+            >
+              <div className="flex items-center justify-center">
+                <span>Vắng</span>
+                {renderSortIcon("absent")}
+              </div>
+            </th>
+            <th
               onClick={() => onSort("totalUnits")}
               className="py-3.5 px-4 cursor-pointer hover:text-ink transition-colors"
             >
@@ -85,7 +103,7 @@ export default function AttendanceSummaryView({
         <tbody className="divide-y divide-hairline-soft text-xs">
           {employees.length === 0 ? (
             <tr>
-              <td colSpan={8} className="py-12 text-center text-stone">
+              <td colSpan={10} className="py-12 text-center text-stone">
                 <AlertCircle className="w-8 h-8 mx-auto mb-2 text-stone/60" />
                 <p className="font-semibold text-ink-deep">
                   Không tìm thấy nhân viên phù hợp
@@ -185,27 +203,27 @@ export default function AttendanceSummaryView({
                             className={cn(
                               "w-2 h-5.5 rounded-[2px] transition-all select-none shrink-0",
                               key === "ON_TIME"
-                                ? "bg-success hover:scale-125 cursor-pointer shadow-2xs"
+                                ? "bg-emerald-500 hover:scale-125 cursor-pointer shadow-2xs"
                                 : key === "LATE_GRACE"
-                                ? "bg-attention hover:scale-125 cursor-pointer shadow-2xs"
+                                ? "bg-amber-500 hover:scale-125 cursor-pointer shadow-2xs"
                                 : key === "LATE_PENALTY"
-                                ? "bg-warning hover:scale-125 cursor-pointer shadow-2xs"
+                                ? "bg-orange-500 hover:scale-125 cursor-pointer shadow-2xs"
                                 : key === "HALF_DAY"
-                                ? "bg-purple-500 hover:scale-125 cursor-pointer shadow-2xs"
+                                ? "bg-indigo-500 hover:scale-125 cursor-pointer shadow-2xs"
                                 : key === "IN_PROGRESS"
-                                ? "bg-primary hover:scale-125 cursor-pointer animate-pulse"
+                                ? "bg-blue-500 hover:scale-125 cursor-pointer animate-pulse"
                                 : key === "MISSING_CHECKOUT"
-                                ? "bg-critical hover:scale-125 cursor-pointer shadow-2xs"
+                                ? "bg-rose-600 hover:scale-125 cursor-pointer shadow-2xs"
                                 : key === "UNDER_HOURS"
-                                ? "bg-critical/60 hover:scale-125 cursor-pointer"
+                                ? "bg-fuchsia-600 hover:scale-125 cursor-pointer shadow-2xs"
                                 : key === "ABSENT"
-                                ? "bg-stone/30 hover:scale-125 cursor-pointer"
+                                ? "bg-slate-400 hover:scale-125 cursor-pointer"
                                 : key === "NOT_CHECKED_IN"
-                                ? "bg-attention/30 hover:scale-125 cursor-pointer"
+                                ? "bg-teal-500 hover:scale-125 cursor-pointer"
                                 : day.isWeekend
                                 ? "bg-surface-soft/60 cursor-default"
                                 : "bg-surface-soft/30 cursor-default",
-                              day.isToday && "ring-1 ring-primary ring-offset-1"
+                              day.isToday && "ring-1 ring-blue-500 ring-offset-1"
                             )}
                           />
                         );
@@ -215,7 +233,7 @@ export default function AttendanceSummaryView({
 
                   {/* Cột 4: Đúng giờ */}
                   <td className="py-3.5 px-4 text-center">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-success/10 text-success font-bold font-mono text-xs border border-success/20">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 font-bold font-mono text-xs border border-emerald-500/20">
                       {stats.onTimeDays}
                     </span>
                   </td>
@@ -223,7 +241,7 @@ export default function AttendanceSummaryView({
                   {/* Cột 5: Đi muộn */}
                   <td className="py-3.5 px-4 text-center">
                     {stats.lateDays > 0 ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-attention/15 text-attention font-bold font-mono text-xs border border-attention/30">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-800 font-bold font-mono text-xs border border-amber-500/30">
                         {stats.lateDays}
                       </span>
                     ) : (
@@ -234,8 +252,30 @@ export default function AttendanceSummaryView({
                   {/* Cột 6: Thiếu check-out */}
                   <td className="py-3.5 px-4 text-center">
                     {stats.missingCheckOutDays > 0 ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-critical/15 text-critical font-bold font-mono text-xs border border-critical/30">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/15 text-rose-700 font-bold font-mono text-xs border border-rose-500/30">
                         {stats.missingCheckOutDays}
+                      </span>
+                    ) : (
+                      <span className="text-stone font-mono">0</span>
+                    )}
+                  </td>
+
+                  {/* Cột 7: Thiếu giờ (< 4h) */}
+                  <td className="py-3.5 px-4 text-center">
+                    {stats.underHoursDays > 0 ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-fuchsia-500/15 text-fuchsia-800 font-bold font-mono text-xs border border-fuchsia-500/30">
+                        {stats.underHoursDays}
+                      </span>
+                    ) : (
+                      <span className="text-stone font-mono">0</span>
+                    )}
+                  </td>
+
+                  {/* Cột 8: Vắng mặt */}
+                  <td className="py-3.5 px-4 text-center">
+                    {stats.absentDays > 0 ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-200/80 text-slate-700 font-bold font-mono text-xs border border-slate-300">
+                        {stats.absentDays}
                       </span>
                     ) : (
                       <span className="text-stone font-mono">0</span>

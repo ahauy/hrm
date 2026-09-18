@@ -34,12 +34,12 @@ export const ATTENDANCE_STATUS = {
     label: "Đúng giờ",
     credit: 1.0,
     creditText: "1.0 công",
-    badgeClass: "bg-success/15 text-[#1b7a37] border-success/30",
-    dotClass: "bg-success",
-    bgClass: "bg-success/[0.06]",
-    borderLeftClass: "border-l-success",
-    borderClass: "border-success/30",
-    textColor: "text-[#1b7a37]",
+    badgeClass: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30",
+    dotClass: "bg-emerald-500",
+    bgClass: "bg-emerald-500/[0.06]",
+    borderLeftClass: "border-l-emerald-500",
+    borderClass: "border-emerald-500/30",
+    textColor: "text-emerald-700",
     shortCode: "1.0",
   },
   LATE_GRACE: {
@@ -47,12 +47,12 @@ export const ATTENDANCE_STATUS = {
     label: "Đi muộn ≤ 15p",
     credit: 1.0,
     creditText: "1.0 công",
-    badgeClass: "bg-attention/20 text-[#9a6400] border-attention/40",
-    dotClass: "bg-attention",
-    bgClass: "bg-attention/[0.07]",
-    borderLeftClass: "border-l-attention",
-    borderClass: "border-attention/30",
-    textColor: "text-[#9a6400]",
+    badgeClass: "bg-amber-500/15 text-amber-800 border-amber-500/30",
+    dotClass: "bg-amber-500",
+    bgClass: "bg-amber-500/[0.06]",
+    borderLeftClass: "border-l-amber-500",
+    borderClass: "border-amber-500/30",
+    textColor: "text-amber-800",
     shortCode: "1.0",
   },
   LATE_PENALTY: {
@@ -60,12 +60,12 @@ export const ATTENDANCE_STATUS = {
     label: "Đi muộn > 15p",
     credit: 0.75,
     creditText: "0.75 công",
-    badgeClass: "bg-warning/25 text-[#a85a00] border-warning/50",
-    dotClass: "bg-warning",
-    bgClass: "bg-warning/[0.08]",
-    borderLeftClass: "border-l-warning",
-    borderClass: "border-warning/40",
-    textColor: "text-[#a85a00]",
+    badgeClass: "bg-orange-500/15 text-orange-800 border-orange-500/30",
+    dotClass: "bg-orange-500",
+    bgClass: "bg-orange-500/[0.06]",
+    borderLeftClass: "border-l-orange-500",
+    borderClass: "border-orange-500/30",
+    textColor: "text-orange-800",
     shortCode: "0.75",
   },
   HALF_DAY: {
@@ -73,25 +73,25 @@ export const ATTENDANCE_STATUS = {
     label: "Nửa công",
     credit: 0.5,
     creditText: "0.5 công",
-    badgeClass: "bg-purple-100 text-purple-700 border-purple-300",
-    dotClass: "bg-purple-500",
-    bgClass: "bg-purple-500/[0.07]",
-    borderLeftClass: "border-l-purple-500",
-    borderClass: "border-purple-300/60",
-    textColor: "text-purple-700",
+    badgeClass: "bg-indigo-500/15 text-indigo-700 border-indigo-500/30",
+    dotClass: "bg-indigo-500",
+    bgClass: "bg-indigo-500/[0.06]",
+    borderLeftClass: "border-l-indigo-500",
+    borderClass: "border-indigo-500/30",
+    textColor: "text-indigo-700",
     shortCode: "0.5",
   },
   UNDER_HOURS: {
     key: "UNDER_HOURS",
-    label: "Không đủ công (< 4h)",
+    label: "Thiếu giờ (< 4h)",
     credit: 0.0,
     creditText: "0 công",
-    badgeClass: "bg-critical/15 text-critical border-critical/30",
-    dotClass: "bg-critical",
-    bgClass: "bg-critical/[0.05]",
-    borderLeftClass: "border-l-critical/80",
-    borderClass: "border-critical/30",
-    textColor: "text-critical",
+    badgeClass: "bg-fuchsia-500/15 text-fuchsia-800 border-fuchsia-500/30",
+    dotClass: "bg-fuchsia-600",
+    bgClass: "bg-fuchsia-500/[0.06]",
+    borderLeftClass: "border-l-fuchsia-600",
+    borderClass: "border-fuchsia-500/30",
+    textColor: "text-fuchsia-800",
     shortCode: "<4h",
   },
   MISSING_CHECKOUT: {
@@ -99,12 +99,12 @@ export const ATTENDANCE_STATUS = {
     label: "Thiếu check-out",
     credit: 0.0,
     creditText: "0 công",
-    badgeClass: "bg-critical/20 text-critical font-bold border-critical/40",
-    dotClass: "bg-critical-strong",
-    bgClass: "bg-critical/[0.08]",
-    borderLeftClass: "border-l-critical",
-    borderClass: "border-critical/40",
-    textColor: "text-critical",
+    badgeClass: "bg-rose-500/20 text-rose-700 font-bold border-rose-500/40",
+    dotClass: "bg-rose-600",
+    bgClass: "bg-rose-500/[0.08]",
+    borderLeftClass: "border-l-rose-600",
+    borderClass: "border-rose-500/40",
+    textColor: "text-rose-700",
     shortCode: "!Out",
   },
   IN_PROGRESS: {
@@ -112,12 +112,12 @@ export const ATTENDANCE_STATUS = {
     label: "Đang làm việc",
     credit: 0.0,
     creditText: "Đang tính",
-    badgeClass: "bg-primary/15 text-primary font-bold border-primary/30",
-    dotClass: "bg-primary",
-    bgClass: "bg-primary/[0.06]",
-    borderLeftClass: "border-l-primary",
-    borderClass: "border-primary/30",
-    textColor: "text-primary",
+    badgeClass: "bg-blue-500/15 text-blue-700 font-bold border-blue-500/30",
+    dotClass: "bg-blue-500 animate-pulse",
+    bgClass: "bg-blue-500/[0.06]",
+    borderLeftClass: "border-l-blue-500",
+    borderClass: "border-blue-500/30",
+    textColor: "text-blue-700",
     shortCode: "ĐL",
   },
   WEEKEND: {
@@ -125,12 +125,12 @@ export const ATTENDANCE_STATUS = {
     label: "Nghỉ cuối tuần",
     credit: 0.0,
     creditText: "--",
-    badgeClass: "bg-surface-soft text-stone border-hairline-soft",
-    dotClass: "bg-hairline",
-    bgClass: "bg-surface-soft/30",
+    badgeClass: "bg-stone-100/70 text-stone-500 border-stone-200/60",
+    dotClass: "bg-stone-300",
+    bgClass: "bg-surface-soft/40",
     borderLeftClass: "border-l-transparent",
     borderClass: "border-hairline-soft/40",
-    textColor: "text-stone",
+    textColor: "text-stone-500",
     shortCode: "CT",
   },
   ABSENT: {
@@ -138,12 +138,12 @@ export const ATTENDANCE_STATUS = {
     label: "Vắng mặt",
     credit: 0.0,
     creditText: "0 công",
-    badgeClass: "bg-stone/15 text-steel border-stone/30",
-    dotClass: "bg-stone",
-    bgClass: "bg-surface-soft/40",
-    borderLeftClass: "border-l-stone/50",
-    borderClass: "border-hairline-soft",
-    textColor: "text-steel",
+    badgeClass: "bg-slate-200/70 text-slate-700 border-slate-300",
+    dotClass: "bg-slate-500",
+    bgClass: "bg-slate-100/60",
+    borderLeftClass: "border-l-slate-400",
+    borderClass: "border-slate-300/60",
+    textColor: "text-slate-600",
     shortCode: "V",
   },
   FUTURE: {
@@ -151,12 +151,12 @@ export const ATTENDANCE_STATUS = {
     label: "Chưa tới ngày",
     credit: 0.0,
     creditText: "--",
-    badgeClass: "bg-transparent text-stone/40 border-hairline-soft/30",
-    dotClass: "bg-hairline-soft",
-    bgClass: "bg-canvas/50",
+    badgeClass: "bg-transparent text-stone-400 border-hairline-soft/30",
+    dotClass: "bg-stone-200",
+    bgClass: "bg-canvas/40",
     borderLeftClass: "border-l-transparent",
-    borderClass: "border-hairline-soft/40",
-    textColor: "text-stone/40",
+    borderClass: "border-hairline-soft/30",
+    textColor: "text-stone-400",
     shortCode: "--",
   },
   NOT_CHECKED_IN: {
@@ -164,12 +164,12 @@ export const ATTENDANCE_STATUS = {
     label: "Chưa chấm công",
     credit: 0.0,
     creditText: "--",
-    badgeClass: "bg-attention/15 text-attention border-attention/30",
-    dotClass: "bg-attention",
-    bgClass: "bg-attention/[0.04]",
-    borderLeftClass: "border-l-attention",
-    borderClass: "border-attention/30",
-    textColor: "text-attention",
+    badgeClass: "bg-teal-500/15 text-teal-800 border-teal-500/30",
+    dotClass: "bg-teal-500",
+    bgClass: "bg-teal-500/[0.05]",
+    borderLeftClass: "border-l-teal-500",
+    borderClass: "border-teal-500/30",
+    textColor: "text-teal-800",
     shortCode: "Chưa",
   },
 };
@@ -195,6 +195,74 @@ function getLunchOverlapMinutes(inDate, outDate) {
   const overlapEnd = Math.min(outMinutes, lunchEnd);
 
   return Math.max(0, overlapEnd - overlapStart);
+}
+
+/**
+ * Gom và chuẩn hóa các bản ghi chấm công nếu có nhiều lần check-in/out trong 1 ngày
+ * @param {Array} records - Danh sách bản ghi trong ngày
+ */
+export function consolidateDayRecords(records) {
+  if (!records || records.length === 0) return null;
+  if (records.length === 1) return records[0];
+
+  // Lọc các bản ghi có checkIn hợp lệ
+  const validCheckIns = records.filter((r) => Boolean(r.checkIn));
+  if (validCheckIns.length === 0) return records[0];
+
+  // Sắp xếp theo checkIn tăng dần (sớm nhất đứng đầu)
+  validCheckIns.sort(
+    (a, b) => new Date(a.checkIn).getTime() - new Date(b.checkIn).getTime()
+  );
+
+  const earliestRecord = validCheckIns[0];
+  const lastRecordByCheckIn = validCheckIns[validCheckIns.length - 1];
+
+  // Tìm checkOut muộn nhất từ các bản ghi có checkOut hợp lệ
+  const recordsWithOut = records.filter((r) => {
+    if (!r.checkOut) return false;
+    if (!r.checkIn) return true;
+    return new Date(r.checkOut).getTime() > new Date(r.checkIn).getTime();
+  });
+  recordsWithOut.sort(
+    (a, b) => new Date(b.checkOut).getTime() - new Date(a.checkOut).getTime()
+  );
+  const latestCheckOut = recordsWithOut[0]?.checkOut || null;
+
+  // Tính tổng số phút làm việc thực tế và trừ nghỉ trưa qua các phiên hợp lệ
+  let totalSessionMinutes = 0;
+  let totalLunchDeduction = 0;
+
+  records.forEach((r) => {
+    if (r.checkIn && r.checkOut) {
+      const s = new Date(r.checkIn);
+      const e = new Date(r.checkOut);
+      if (e.getTime() > s.getTime()) {
+        const dur = Math.floor((e.getTime() - s.getTime()) / (1000 * 60));
+        totalSessionMinutes += dur;
+        totalLunchDeduction += getLunchOverlapMinutes(s, e);
+      }
+    }
+  });
+
+  // Xác định checkOut cuối cùng:
+  // - Nếu không có bất kỳ bản ghi nào có checkOut -> null
+  // - Nếu có latestCheckOut:
+  //   + Nếu bản ghi check-in cuối cùng có checkOut -> latestCheckOut
+  //   + Nếu bản ghi cuối cùng chưa check-out nhưng trước đó đã có phiên hoàn thành (totalSessionMinutes > 0) -> giữ latestCheckOut
+  //   + Nếu không có phiên nào hoàn thành -> null
+  const hasCompletedSessions = totalSessionMinutes > 0;
+  const isLastOpenWithoutSessions = !lastRecordByCheckIn.checkOut && !hasCompletedSessions;
+  const finalCheckOut = isLastOpenWithoutSessions ? null : latestCheckOut;
+
+  return {
+    ...earliestRecord,
+    id: lastRecordByCheckIn.id || earliestRecord.id,
+    checkIn: earliestRecord.checkIn,
+    checkOut: finalCheckOut,
+    totalSessionMinutes,
+    totalLunchDeduction,
+    _rawRecords: records,
+  };
 }
 
 /**
@@ -285,9 +353,39 @@ export function evaluateDayAttendance(record, dateStr, now = new Date()) {
   const lateMinutes = Math.max(0, Math.floor(checkInMinutes - standardStartMinutes));
   const isLate = lateMinutes > 0;
 
-  // Chưa có Check-out
-  if (!record.checkOut) {
+  // Kiểm tra tính hợp lệ của Check-out
+  const checkOutDate = record.checkOut ? new Date(record.checkOut) : null;
+  const hasValidCheckOut = Boolean(
+    checkOutDate &&
+      !isNaN(checkOutDate.getTime()) &&
+      checkOutDate.getTime() > checkInDate.getTime()
+  );
+
+  // Chưa có Check-out hợp lệ
+  if (!hasValidCheckOut) {
     if (isToday) {
+      // Nếu là hôm nay, kiểm tra xem đã qua giờ tan ca (18:00) chưa
+      const isPastShiftEnd =
+        now.getHours() > SHIFT_CONFIG.END_HOUR ||
+        (now.getHours() === SHIFT_CONFIG.END_HOUR &&
+          now.getMinutes() >= SHIFT_CONFIG.END_MINUTE);
+
+      if (isPastShiftEnd) {
+        return {
+          dateStr,
+          record,
+          status: ATTENDANCE_STATUS.MISSING_CHECKOUT,
+          credit: 0,
+          isLate,
+          isWeekend,
+          isMissingCheckout: true,
+          workMinutes: 0,
+          lateMinutes,
+          checkInTime: record.checkIn,
+          checkOutTime: null,
+        };
+      }
+
       return {
         dateStr,
         record,
@@ -302,6 +400,7 @@ export function evaluateDayAttendance(record, dateStr, now = new Date()) {
         checkOutTime: null,
       };
     }
+
     // Quá khứ mà không check-out: Thiếu check-out (0 công)
     return {
       dateStr,
@@ -318,17 +417,23 @@ export function evaluateDayAttendance(record, dateStr, now = new Date()) {
     };
   }
 
-  // ĐÃ CÓ CẢ CHECK-IN VÀ CHECK-OUT
-  const checkOutDate = new Date(record.checkOut);
-  const elapsedMinutes = Math.max(
-    0,
-    Math.floor((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60))
-  );
+  // ĐÃ CÓ CẢ CHECK-IN VÀ CHECK-OUT HỢP LỆ
+  const elapsedMinutes =
+    record.totalSessionMinutes !== undefined && record.totalSessionMinutes > 0
+      ? record.totalSessionMinutes
+      : Math.max(
+          0,
+          Math.floor((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60))
+        );
 
-  const lunchDeduction = getLunchOverlapMinutes(checkInDate, checkOutDate);
+  const lunchDeduction =
+    record.totalLunchDeduction !== undefined
+      ? record.totalLunchDeduction
+      : getLunchOverlapMinutes(checkInDate, checkOutDate);
+
   const effectiveWorkMinutes = Math.max(0, elapsedMinutes - lunchDeduction);
 
-  // 1. Nếu tổng thời gian làm việc < 4 tiếng (240 phút) -> Không đủ công (0 công)
+  // 1. Nếu tổng thời gian làm việc < 4 tiếng (240 phút) -> Thiếu giờ / Không đủ công (0 công)
   if (effectiveWorkMinutes < SHIFT_CONFIG.HALF_DAY_MIN_MINUTES) {
     return {
       dateStr,
@@ -355,7 +460,7 @@ export function evaluateDayAttendance(record, dateStr, now = new Date()) {
       record,
       status: ATTENDANCE_STATUS.HALF_DAY,
       credit: ATTENDANCE_STATUS.HALF_DAY.credit,
-      isLate: true,
+      isLate,
       isWeekend,
       isMissingCheckout: false,
       workMinutes: effectiveWorkMinutes,
@@ -435,14 +540,14 @@ export function calculateMonthlyStats(attendances = [], year, month, standardWor
   const monthPadded = String(month).padStart(2, "0");
 
   // Gom các bản ghi theo ngày YYYY-MM-DD
-  const recordMap = {};
+  const dayRecordsMap = {};
   attendances.forEach((att) => {
     if (!att || !att.date) return;
     const key = att.date.slice(0, 10);
-    // Nếu có nhiều record, ưu tiên bản ghi có ID lớn hơn
-    if (!recordMap[key] || (att.id || 0) > (recordMap[key].id || 0)) {
-      recordMap[key] = att;
+    if (!dayRecordsMap[key]) {
+      dayRecordsMap[key] = [];
     }
+    dayRecordsMap[key].push(att);
   });
 
   const daysMap = {};
@@ -450,6 +555,7 @@ export function calculateMonthlyStats(attendances = [], year, month, standardWor
   let onTimeDays = 0;
   let lateDays = 0;
   let missingCheckOutDays = 0;
+  let underHoursDays = 0;
   let halfDays = 0;
   let absentDays = 0;
   let actualWorkWeekdays = 0;
@@ -459,9 +565,10 @@ export function calculateMonthlyStats(attendances = [], year, month, standardWor
   for (let d = 1; d <= daysInMonth; d++) {
     const dayPadded = String(d).padStart(2, "0");
     const dateStr = `${year}-${monthPadded}-${dayPadded}`;
-    const record = recordMap[dateStr] || null;
+    const rawRecords = dayRecordsMap[dateStr] || [];
+    const consolidated = consolidateDayRecords(rawRecords);
 
-    const evaluated = evaluateDayAttendance(record, dateStr, now);
+    const evaluated = evaluateDayAttendance(consolidated, dateStr, now);
     daysMap[dateStr] = evaluated;
 
     if (!evaluated.isWeekend) {
@@ -472,15 +579,20 @@ export function calculateMonthlyStats(attendances = [], year, month, standardWor
       totalWorkUnits += evaluated.credit;
     }
 
+    // 1. Ghi nhận số ngày đi muộn: Bất cứ ngày nào có đi muộn (check-in sau 08:30)
+    if (evaluated.isLate) {
+      lateDays += 1;
+    }
+
+    // 2. Thống kê theo phân loại trạng thái chuyên cần
     if (evaluated.status.key === "ON_TIME") {
       onTimeDays += 1;
-    } else if (evaluated.status.key === "LATE_GRACE" || evaluated.status.key === "LATE_PENALTY") {
-      lateDays += 1;
     } else if (evaluated.status.key === "HALF_DAY") {
       halfDays += 1;
-      if (evaluated.isLate) lateDays += 1;
     } else if (evaluated.status.key === "MISSING_CHECKOUT") {
       missingCheckOutDays += 1;
+    } else if (evaluated.status.key === "UNDER_HOURS") {
+      underHoursDays += 1;
     } else if (evaluated.status.key === "ABSENT") {
       absentDays += 1;
     }
@@ -500,6 +612,7 @@ export function calculateMonthlyStats(attendances = [], year, month, standardWor
     onTimeDays,
     lateDays,
     missingCheckOutDays,
+    underHoursDays,
     halfDays,
     absentDays,
     daysMap,
