@@ -1,20 +1,21 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useAuthStore } from "../stores/useAuthStore.js";
+import { useAuth } from "../hooks/useAuth.js";
+import { usePagination } from "../hooks/usePagination.js";
 import NotAuthorPage from "./NotAuthorPage.jsx";
 import TableEmployees from "../components/table/TableEmployees.jsx";
 import EmployeeFormModal from "../components/modal/EmployeeFormModal.jsx";
 import DeleteEmployeeModal from "../components/modal/DeleteEmployeeModal.jsx";
+import StatCard from "../components/common/StatCard.jsx";
+import SearchInput from "../components/common/SearchInput.jsx";
 import { employeeServices } from "../services/employeeServices.js";
 import { toast } from "sonner";
 import {
   Users,
   UserPlus,
   RefreshCw,
-  Search,
   Shield,
   Building,
   UserCheck,
-  X,
   Filter,
 } from "lucide-react";
 import { cn } from "../utils/cn.js";
@@ -22,27 +23,22 @@ import { cn } from "../utils/cn.js";
 const PAGE_SIZE = 8;
 
 export default function EmployeesPage() {
-  const profile = useAuthStore((state) => state.profile);
-  const isAuthLoading = useAuthStore((state) => state.isAuthLoading);
-
-  const role = profile?.role?.trim()?.toLowerCase() || "";
-  const isAdmin = role.includes("admin");
+  const { profile, isAuthLoading, isAdmin } = useAuth();
 
   // Dữ liệu danh sách nhân viên
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Bộ lọc & Tìm kiếm & Phân trang
+  // Bộ lọc & Tìm kiếm
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedRole, setSelectedRole] = useState("all"); // 'all' | 'admin' | 'employee'
-  const [currentPage, setCurrentPage] = useState(1);
 
   // Trạng thái modal
   const [formModal, setFormModal] = useState({
     isOpen: false,
-    employee: null, // null: Thêm mới | object: Chỉnh sửa
+    employee: null,
   });
 
   const [deleteModal, setDeleteModal] = useState({
@@ -205,15 +201,15 @@ export default function EmployeesPage() {
     });
   }, [employees, selectedRole, selectedDepartment, searchTerm]);
 
-  // Phân trang
-  const totalPages = Math.max(1, Math.ceil(filteredEmployees.length / PAGE_SIZE));
-  const safeCurrentPage = Math.min(currentPage, totalPages);
-  const paginatedEmployees = useMemo(() => {
-    const startIdx = (safeCurrentPage - 1) * PAGE_SIZE;
-    return filteredEmployees.slice(startIdx, startIdx + PAGE_SIZE);
-  }, [filteredEmployees, safeCurrentPage]);
+  // Quản lý phân trang qua custom hook
+  const {
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    paginatedData: paginatedEmployees,
+  } = usePagination(filteredEmployees, PAGE_SIZE);
 
-  // Kiểm tra quyền truy cập: Nếu không phải Admin, hiển thị NotAuthorPage
+  // Kiểm tra quyền truy cập
   if (!isAuthLoading && !isAdmin) {
     return <NotAuthorPage />;
   }
@@ -260,162 +256,97 @@ export default function EmployeesPage() {
         </div>
       </div>
 
-      {/* 2. Dải Thẻ Thống Kê Tương Tác */}
+      {/* 2. Dải Thẻ Thống Kê Tương Tác dùng chung StatCard */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        {/* Tổng nhân sự */}
-        <div
-          role="button"
-          tabIndex={0}
+        <StatCard
+          title="Tổng số nhân sự"
+          value={stats.total}
+          subtext="Tất cả thành viên trong tổ chức"
+          icon={<Users className="w-4 h-4" />}
+          iconBg="bg-surface-soft text-slate border border-hairline-soft"
+          isActive={selectedRole === "all" && selectedDepartment === "all"}
           onClick={() => {
             setSelectedRole("all");
             setSelectedDepartment("all");
             setCurrentPage(1);
           }}
-          className={cn(
-            "p-4 rounded-2xl bg-canvas border transition-all cursor-pointer shadow-2xs hover:shadow-xs",
-            selectedRole === "all" && selectedDepartment === "all"
-              ? "border-primary ring-2 ring-primary/10 bg-primary/[0.02]"
-              : "border-hairline-soft hover:border-hairline"
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-steel uppercase tracking-wider">
-              Tổng số nhân sự
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-surface-soft text-slate flex items-center justify-center">
-              <Users className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-ink-deep font-mono tabular-nums">
-              {stats.total}
-            </span>
-            <span className="text-xs text-stone">thành viên</span>
-          </div>
-        </div>
+        />
 
-        {/* Quản trị viên */}
-        <div
-          role="button"
-          tabIndex={0}
+        <StatCard
+          title="Quản trị viên"
+          value={stats.adminCount}
+          subtext="Toàn quyền quản trị hệ thống"
+          icon={<Shield className="w-4 h-4 text-primary" />}
+          iconBg="bg-primary/10 text-primary border border-primary/20"
+          isActive={selectedRole === "admin"}
           onClick={() => {
             setSelectedRole("admin");
             setCurrentPage(1);
           }}
-          className={cn(
-            "p-4 rounded-2xl bg-canvas border transition-all cursor-pointer shadow-2xs hover:shadow-xs",
-            selectedRole === "admin"
-              ? "border-primary ring-2 ring-primary/20 bg-primary/[0.04]"
-              : "border-hairline-soft hover:border-hairline"
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-primary uppercase tracking-wider">
-              Quản trị viên
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-              <Shield className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-ink-deep font-mono tabular-nums">
-              {stats.adminCount}
-            </span>
-            <span className="text-xs text-primary font-medium">toàn quyền</span>
-          </div>
-        </div>
+        />
 
-        {/* Nhân viên thường */}
-        <div
-          role="button"
-          tabIndex={0}
+        <StatCard
+          title="Nhân viên"
+          value={stats.employeeCount}
+          subtext="Quyền thao tác tiêu chuẩn"
+          icon={<UserCheck className="w-4 h-4 text-steel" />}
+          iconBg="bg-surface-soft text-slate border border-hairline-soft"
+          isActive={selectedRole === "employee"}
           onClick={() => {
             setSelectedRole("employee");
             setCurrentPage(1);
           }}
-          className={cn(
-            "p-4 rounded-2xl bg-canvas border transition-all cursor-pointer shadow-2xs hover:shadow-xs",
-            selectedRole === "employee"
-              ? "border-slate ring-2 ring-slate/20 bg-slate/[0.04]"
-              : "border-hairline-soft hover:border-hairline"
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-steel uppercase tracking-wider">
-              Nhân viên
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-surface-soft text-slate flex items-center justify-center">
-              <UserCheck className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-ink-deep font-mono tabular-nums">
-              {stats.employeeCount}
-            </span>
-            <span className="text-xs text-steel font-medium">tiêu chuẩn</span>
-          </div>
-        </div>
+        />
 
-        {/* Số phòng ban */}
-        <div className="p-4 rounded-2xl bg-canvas border border-hairline-soft shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-steel uppercase tracking-wider">
-              Phòng ban hoạt động
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-surface-soft text-slate flex items-center justify-center">
-              <Building className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-ink-deep font-mono tabular-nums">
-              {stats.departmentsCount}
-            </span>
-            <span className="text-xs text-stone">phòng ban</span>
-          </div>
-        </div>
+        <StatCard
+          title="Phòng ban hoạt động"
+          value={stats.departmentsCount}
+          subtext="Số đơn vị phòng ban hiện có"
+          icon={<Building className="w-4 h-4 text-steel" />}
+          iconBg="bg-surface-soft text-slate border border-hairline-soft"
+        />
       </div>
 
       {/* 3. Thanh Tìm Kiếm & Bộ Lọc Đa Chiều */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-1">
-        {/* Tìm kiếm đa trường */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-stone absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            placeholder="Tìm theo họ tên, username, email, phòng ban..."
-            className="w-full pl-9 pr-8 py-2 rounded-xl border border-hairline-soft bg-canvas text-xs text-ink placeholder:text-stone focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-2xs"
-          />
-          {searchTerm && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchTerm("");
+        {/* Tìm kiếm đa trường dùng SearchInput */}
+        <SearchInput
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1);
+          }}
+          placeholder="Tìm theo họ tên, username, email, phòng ban..."
+        />
+
+        {/* Cụm bộ lọc Role & Phòng ban */}
+        <div className="flex flex-wrap items-center gap-2 self-stretch md:self-auto">
+          {/* Lọc theo Vai trò */}
+          <div className="relative flex-1 sm:flex-none">
+            <select
+              value={selectedRole}
+              onChange={(e) => {
+                setSelectedRole(e.target.value);
                 setCurrentPage(1);
               }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-md text-stone hover:text-ink transition-colors cursor-pointer"
+              className="w-full sm:w-auto pl-3 pr-8 py-2 rounded-xl border border-hairline bg-canvas text-xs font-medium text-ink focus:outline-none focus:border-primary transition-all cursor-pointer shadow-2xs appearance-none"
             >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
+              <option value="all">Tất cả vai trò</option>
+              <option value="admin">Quản trị viên ({stats.adminCount})</option>
+              <option value="employee">Nhân viên ({stats.employeeCount})</option>
+            </select>
+            <Filter className="w-3.5 h-3.5 text-stone absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
 
-        {/* Bộ lọc phòng ban và vai trò */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Lọc phòng ban */}
-          <div className="flex items-center gap-1.5 bg-canvas border border-hairline-soft rounded-xl px-2.5 py-1.5 shadow-2xs">
-            <Filter className="w-3.5 h-3.5 text-steel" />
+          {/* Lọc theo Phòng ban */}
+          <div className="relative flex-1 sm:flex-none">
             <select
               value={selectedDepartment}
               onChange={(e) => {
                 setSelectedDepartment(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-transparent text-xs font-medium text-ink focus:outline-none cursor-pointer pr-1"
+              className="w-full sm:w-auto pl-3 pr-8 py-2 rounded-xl border border-hairline bg-canvas text-xs font-medium text-ink focus:outline-none focus:border-primary transition-all cursor-pointer shadow-2xs appearance-none"
             >
               <option value="all">Tất cả phòng ban</option>
               {departmentOptions.map((dept) => (
@@ -424,40 +355,28 @@ export default function EmployeesPage() {
                 </option>
               ))}
             </select>
+            <Building className="w-3.5 h-3.5 text-stone absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
-          {/* Lọc vai trò */}
-          <div className="flex items-center gap-1 p-1 bg-canvas border border-hairline-soft rounded-xl shadow-2xs">
-            {[
-              { id: "all", label: "Tất cả" },
-              { id: "admin", label: "Admin" },
-              { id: "employee", label: "Nhân viên" },
-            ].map((tab) => {
-              const isActive = selectedRole === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedRole(tab.id);
-                    setCurrentPage(1);
-                  }}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
-                    isActive
-                      ? "bg-primary text-white shadow-2xs"
-                      : "text-slate hover:text-ink hover:bg-surface-soft"
-                  )}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+          {/* Nút Xóa bộ lọc nếu có lựa chọn khác mặc định */}
+          {(searchTerm || selectedRole !== "all" || selectedDepartment !== "all") && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm("");
+                setSelectedRole("all");
+                setSelectedDepartment("all");
+                setCurrentPage(1);
+              }}
+              className="px-3 py-2 rounded-xl border border-hairline bg-surface-soft hover:bg-surface text-xs font-medium text-steel hover:text-ink transition-colors cursor-pointer"
+            >
+              Xóa lọc
+            </button>
+          )}
         </div>
       </div>
 
-      {/* 4. Bảng Danh Sách Nhân Viên */}
+      {/* 4. Bảng Dữ Liệu Nhân Viên */}
       <TableEmployees
         employees={paginatedEmployees}
         isLoading={isLoading}
@@ -466,7 +385,7 @@ export default function EmployeesPage() {
         onDelete={handleOpenDeleteModal}
         emptyText={
           searchTerm || selectedDepartment !== "all" || selectedRole !== "all"
-            ? "Không tìm thấy nhân viên nào phù hợp với bộ lọc hiện tại"
+            ? "Không tìm thấy nhân viên nào phù hợp với điều kiện tìm kiếm."
             : "Chưa có nhân viên nào trong danh sách"
         }
         emptyAction={
@@ -482,7 +401,7 @@ export default function EmployeesPage() {
           ) : undefined
         }
         pagination={{
-          currentPage: safeCurrentPage,
+          currentPage,
           totalPages,
           totalItems: filteredEmployees.length,
           onPageChange: (newPage) => setCurrentPage(newPage),
@@ -504,14 +423,12 @@ export default function EmployeesPage() {
         employee={deleteModal.employee}
         onConfirm={handleConfirmDelete}
         isLoading={isDeleting}
-        isSelf={
-          Boolean(
-            deleteModal.employee &&
-              ((profile?.id && deleteModal.employee.id === profile.id) ||
-                (profile?.username &&
-                  deleteModal.employee.username === profile.username))
-          )
-        }
+        isSelf={Boolean(
+          deleteModal.employee &&
+            ((profile?.id && deleteModal.employee.id === profile.id) ||
+              (profile?.username &&
+                deleteModal.employee.username === profile.username))
+        )}
       />
     </div>
   );

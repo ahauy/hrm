@@ -14,6 +14,7 @@ import {
   Shield,
   Save,
   AlertCircle,
+  Banknote,
 } from "lucide-react";
 import Modal from "./Modal.jsx";
 import {
@@ -56,6 +57,7 @@ export default function EmployeeFormModal({
       phone: "",
       position: "",
       department: "",
+      baseSalary: 0,
       role: "employee",
       joinDate: new Date().toISOString().split("T")[0],
     },
@@ -73,6 +75,7 @@ export default function EmployeeFormModal({
           phone: employee.phone || "",
           position: employee.position || "",
           department: employee.department || "",
+          baseSalary: employee.baseSalary ?? 0,
           role: employee.role === "admin" ? "admin" : "employee",
           joinDate: employee.joinDate
             ? employee.joinDate.split("T")[0]
@@ -87,6 +90,7 @@ export default function EmployeeFormModal({
           phone: "",
           position: "",
           department: "",
+          baseSalary: 0,
           role: "employee",
           joinDate: new Date().toISOString().split("T")[0],
         });
@@ -109,6 +113,7 @@ export default function EmployeeFormModal({
           phone: data.phone?.trim() || "",
           position: data.position?.trim() || "",
           department: data.department?.trim() || "",
+          baseSalary: Number(data.baseSalary) || 0,
           role: data.role,
           joinDate: data.joinDate || undefined,
         };
@@ -129,6 +134,7 @@ export default function EmployeeFormModal({
           phone: data.phone?.trim() || "",
           position: data.position?.trim() || "",
           department: data.department?.trim() || "",
+          baseSalary: Number(data.baseSalary) || 0,
           role: data.role,
           joinDate: data.joinDate || undefined,
         };
@@ -438,7 +444,42 @@ export default function EmployeeFormModal({
           </div>
         </div>
 
-        {/* Hàng 5: Vai trò hệ thống (Role) */}
+        {/* Hàng 5: Lương cơ bản */}
+        <div>
+          <label
+            htmlFor="baseSalary"
+            className="block text-xs font-semibold text-ink-deep mb-1.5"
+          >
+            Lương cơ bản (VND / tháng)
+          </label>
+          <div className="relative">
+            <Banknote className="w-4 h-4 text-stone absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              id="baseSalary"
+              type="number"
+              step="500000"
+              min="0"
+              {...register("baseSalary")}
+              placeholder="VD: 10000000"
+              className={cn(
+                "w-full pl-9 pr-3 py-2 rounded-xl border border-hairline-soft bg-canvas text-xs font-mono text-ink placeholder:text-stone focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all",
+                errors.baseSalary && "border-critical focus:border-critical focus:ring-critical/20"
+              )}
+            />
+          </div>
+          {errors.baseSalary ? (
+            <p className="flex items-center gap-1 text-[11px] text-critical mt-1">
+              <AlertCircle className="w-3 h-3 shrink-0" />
+              <span>{errors.baseSalary.message}</span>
+            </p>
+          ) : (
+            <p className="text-[11px] text-stone mt-1">
+              Mức lương cơ sở dùng để tính lương theo ngày công trong kỳ chốt lương.
+            </p>
+          )}
+        </div>
+
+        {/* Hàng 6: Vai trò hệ thống (Role) */}
         <div className="pt-1">
           <label className="block text-xs font-semibold text-ink-deep mb-2">
             Vai trò hệ thống <span className="text-critical">*</span>

@@ -14,7 +14,7 @@ function EditPayrollContent({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const baseSalary = Number(payrollRecord.baseSalary) || 0;
-  const standardWorkDays = Number(payrollRecord.standardWorkDays) || 26;
+  const standardWorkDays = Number(payrollRecord.standardWorkDays) || 22;
   const actualWorkDays = Number(payrollRecord.actualWorkDays) || 0;
 
   // Tính lương thực lĩnh sau điều chỉnh mới (giữ nguyên số ngày công đã chốt)
@@ -33,7 +33,11 @@ function EditPayrollContent({
     e.preventDefault();
     try {
       setIsSubmitting(true);
-      await onUpdate(payrollRecord.id, {
+      const targetId = payrollRecord.payrollId || payrollRecord.id;
+      if (!targetId) {
+        throw new Error("Không tìm thấy ID bản ghi lương để cập nhật");
+      }
+      await onUpdate(targetId, {
         adjustment: Number(adjustment) || 0,
         note: note.trim(),
       });

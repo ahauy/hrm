@@ -193,15 +193,19 @@ export default function Attendance({
                 </>
               )}
             </button>
-          ) : duration.isEnough8Hours ? (
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-success/10 text-success text-xs font-semibold border border-success/30 shadow-2xs">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Đã hoàn thành công</span>
-            </div>
           ) : (
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-critical/10 text-critical text-xs font-semibold border border-critical/30 shadow-2xs">
-              <AlertTriangle className="w-4 h-4" />
-              <span>Thiếu giờ công</span>
+            <div className="flex flex-wrap items-center gap-2.5">
+              {duration.isEnough8Hours ? (
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-success/10 text-success text-xs font-semibold border border-success/30 shadow-2xs">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Đã hoàn thành công</span>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-critical/10 text-critical text-xs font-semibold border border-critical/30 shadow-2xs">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>Thiếu giờ công</span>
+                </div>
+              )}
             </div>
           )}
         </div>

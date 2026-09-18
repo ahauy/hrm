@@ -27,6 +27,13 @@ export const createEmployeeSchema = z.object({
   phone: z.string().trim().optional().or(z.literal("")),
   position: z.string().trim().optional().or(z.literal("")),
   department: z.string().trim().optional().or(z.literal("")),
+  baseSalary: z
+    .union([z.number(), z.string()])
+    .optional()
+    .transform((val) => (val === "" || val === undefined || val === null ? 0 : Number(val)))
+    .refine((val) => !isNaN(val) && val >= 0, {
+      message: "Lương cơ bản không được nhỏ hơn 0",
+    }),
   role: z.enum(["admin", "employee"], {
     errorMap: () => ({ message: "Vai trò phải là admin hoặc employee" }),
   }),
@@ -57,6 +64,13 @@ export const updateEmployeeSchema = z.object({
   phone: z.string().trim().optional().or(z.literal("")),
   position: z.string().trim().optional().or(z.literal("")),
   department: z.string().trim().optional().or(z.literal("")),
+  baseSalary: z
+    .union([z.number(), z.string()])
+    .optional()
+    .transform((val) => (val === "" || val === undefined || val === null ? 0 : Number(val)))
+    .refine((val) => !isNaN(val) && val >= 0, {
+      message: "Lương cơ bản không được nhỏ hơn 0",
+    }),
   role: z.enum(["admin", "employee"], {
     errorMap: () => ({ message: "Vai trò phải là admin hoặc employee" }),
   }),

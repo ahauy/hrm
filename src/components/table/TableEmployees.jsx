@@ -1,7 +1,6 @@
 import Table from "./Table.jsx";
+import RoleBadge from "../common/RoleBadge.jsx";
 import {
-  User,
-  Shield,
   Edit2,
   Trash2,
   Lock,
@@ -11,6 +10,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { formatDate } from "../../utils/formatTime.js";
+import { formatCurrency } from "../../utils/formatCurrency.js";
 
 /**
  * Component TableEmployees
@@ -36,27 +36,6 @@ export default function TableEmployees({
 }) {
   const currentUserId = currentProfile?.id;
   const currentUsername = currentProfile?.username;
-
-  // Render badge vai trò theo phong cách Meta Design System
-  const renderRoleBadge = (role) => {
-    const isAdmin = (role || "").toLowerCase().includes("admin");
-
-    if (isAdmin) {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/25">
-          <Shield className="w-3 h-3 text-primary" />
-          <span>Quản trị viên</span>
-        </span>
-      );
-    }
-
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-surface-soft text-slate border border-hairline-soft">
-        <User className="w-3 h-3 text-steel" />
-        <span>Nhân viên</span>
-      </span>
-    );
-  };
 
   const columns = [
     {
@@ -129,7 +108,18 @@ export default function TableEmployees({
       header: "Vai trò",
       accessor: "role",
       className: "w-36",
-      render: (role) => renderRoleBadge(role),
+      render: (role) => <RoleBadge role={role} />,
+    },
+    {
+      header: "Lương cơ bản",
+      accessor: "baseSalary",
+      align: "right",
+      className: "w-36",
+      render: (val) => (
+        <span className="font-mono text-xs font-semibold text-ink-deep">
+          {formatCurrency(val || 0)}
+        </span>
+      ),
     },
     {
       header: "Ngày vào làm",

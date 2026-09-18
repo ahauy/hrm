@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useAuthStore } from "./stores/useAuthStore";
 import { useEffect } from "react";
+import { useAuth } from "./hooks/useAuth.js";
 import LoginPage from "./pages/LoginPage";
 import { Loader } from "lucide-react";
 import DashboardPage from "./pages/DashboardPage";
@@ -13,10 +13,7 @@ import ProfilePage from "./pages/ProfilePage";
 import MainLayout from "./layouts/MainLayout";
 
 function App() {
-  // xu ly phan DANG NHAP
-  const { token, isAuthLoading, setAuthLoading } = useAuthStore();
-
-  // console.log("token: ", !!token)
+  const { token, isAuthLoading, setAuthLoading } = useAuth();
 
   useEffect(() => {
     setAuthLoading();
@@ -46,14 +43,15 @@ function App() {
           token ? (
             <MainLayout>
               <Routes>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/" element={<DashboardPage />} />
                 <Route path="/employees" element={<EmployeesPage />} />
                 <Route path="/payroll" element={<PayrollPage />} />
                 <Route path="/leave-requests" element={<LeaveRequestsPage />} />
                 <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/setting" element={<SettingPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </MainLayout>
           ) : (

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAuthStore } from "../stores/useAuthStore.js";
+import { useAuth } from "../hooks/useAuth.js";
 import NotAuthorPage from "./NotAuthorPage.jsx";
 import Attendance from "../components/attendance/Attendance.jsx";
 import AttendanceCalendar from "../components/attendance/AttendanceCalendar.jsx";
@@ -20,10 +20,7 @@ import { cn } from "../utils/cn.js";
 import RegulationsModal from "../components/modal/RegulationsModal.jsx";
 
 export default function AttendancePage() {
-  const profile = useAuthStore((state) => state.profile);
-  const role = profile?.role?.trim()?.toLowerCase() || "";
-  const isAdmin = role.includes("admin");
-  const isEmployee = role.includes("employee");
+  const { profile, isAdmin, isEmployee } = useAuth();
 
   // Dữ liệu chung
   const [attendances, setAttendances] = useState([]);

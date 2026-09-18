@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, User, Settings, LogOut } from "lucide-react";
-import { useAuthStore } from "../../stores/useAuthStore";
+import { useAuth } from "../../hooks/useAuth.js";
 import { cn } from "../../utils/cn.js";
+import RoleBadge from "../common/RoleBadge.jsx";
 
 export default function UserProfile() {
-  const { profile, logOut } = useAuthStore();
+  const { profile, logOut, isAdmin } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -20,8 +21,7 @@ export default function UserProfile() {
   }, []);
 
   const displayName = profile?.fullName || profile?.username || "Admin User";
-  const userRole =
-    profile?.role === "admin" ? "Quản trị viên" : profile?.role || "Nhân viên";
+  const userRole = isAdmin ? "Quản trị viên" : profile?.role || "Nhân viên";
   const initials = displayName
     .split(" ")
     .map((word) => word[0])
@@ -67,9 +67,9 @@ export default function UserProfile() {
             <p className="text-[11px] text-steel truncate mt-0.5">
               {profile?.email || "admin@hrm.vn"}
             </p>
-            <span className="inline-block mt-2 px-2 py-0.5 bg-surface-soft text-slate text-[10px] font-medium border border-hairline-soft rounded-md">
-              {userRole}
-            </span>
+            <div className="mt-2">
+              <RoleBadge role={profile?.role} size="sm" />
+            </div>
           </div>
 
           <div className="py-1 px-1.5 space-y-0.5">

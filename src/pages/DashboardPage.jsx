@@ -1,107 +1,74 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../stores/useAuthStore.js";
-import NotAuthorPage from "./NotAuthorPage.jsx";
-import TableLeaveRequests from "../components/table/TableLeaveRequests.jsx";
-import { leaveRequestsServices } from "../services/leaveRequestsServices.js";
+import { useAuth } from "../hooks/useAuth.js";
+import { useLeaveRequests } from "../hooks/useLeaveRequests.js";
 import { attendanceServices } from "../services/attendanceServices.js";
 import { useAttendanceAction } from "../hooks/useAttendanceAction.js";
-import api from "../utils/axios.js";
-import { toast } from "sonner";
-import { FileText, RefreshCw, CalendarCheck, Plus, Search } from "lucide-react";
+import NotAuthorPage from "./NotAuthorPage.jsx";
+import TableLeaveRequests from "../components/table/TableLeaveRequests.jsx";
 import AttendanceBadge from "../components/attendance/AttendanceBadge.jsx";
 import Attendance from "../components/attendance/Attendance.jsx";
+import SearchInput from "../components/common/SearchInput.jsx";
+import { FileText, RefreshCw, CalendarCheck, Plus } from "lucide-react";
 import { cn } from "../utils/cn.js";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
-  const profile = useAuthStore((state) => state.profile);
-  const [requests, setRequests] = useState([]);
-  const [employeesMap, setEmployeesMap] = useState({});
+  const { profile, isAdmin, isEmployee } = useAuth();
+  const navigate = useNavigate();
+
+  // Dữ liệu chấm công
   const [attendances, setAttendances] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isAttLoading, setIsAttLoading] = useState(true);
+  const [isAttRefreshing, setIsAttRefreshing] = useState(false);
 
-  const EMPLOYEE = "employee";
-  const ADMIN = "admin";
+  // Quản lý đơn nghỉ phép qua custom hook dùng chung
+  const {
+    requests,
+    employeesMap,
+    isLoading: isLeaveLoading,
+    isRefreshing: isLeaveRefreshing,
+    stats,
+    handleRefresh: handleRefreshLeave,
+    handleApprove,
+    handleReject,
+  } = useLeaveRequests({ isAdmin, autoFetch: isAdmin || isEmployee });
 
-  const role = profile?.role?.trim()?.toLowerCase() || "";
-  const isAdmin = role.includes(ADMIN);
-  const isEmployee = role.includes(EMPLOYEE);
+  // Tải dữ liệu chấm công
+  const fetchAttendanceData = useCallback(async () => {
+    try {
+      const attData = await attendanceServices.getAttendance();
+      setAttendances(Array.isArray(attData) ? attData : []);
+    } catch (error) {
+      console.error("Lỗi khi tải dữ liệu chấm công:", error);
+      toast.error("Không thể tải dữ liệu chấm công");
+    } finally {
+      setIsAttLoading(false);
+      setIsAttRefreshing(false);
+    }
+  }, []);
 
-  // Tải dữ liệu ban đầu
   useEffect(() => {
     let isMounted = true;
-
     async function loadData() {
-      try {
-        // Tải đơn nghỉ phép
-        const reqPromise = leaveRequestsServices.getLeaveRequests();
-        // Tải thông tin chấm công
-        const attPromise = attendanceServices.getAttendance();
-
-        const [leaveData, attData] = await Promise.all([
-          reqPromise,
-          attPromise,
-        ]);
-
-        if (!isMounted) return;
-
-        setRequests(Array.isArray(leaveData) ? leaveData : []);
-        setAttendances(Array.isArray(attData) ? attData : []);
-
-        // Nếu là admin, tải thêm danh sách nhân viên
-        if (isAdmin) {
-          try {
-            const empRes = await api.get("/api/employees");
-            if (isMounted && Array.isArray(empRes.data)) {
-              const map = {};
-              empRes.data.forEach((emp) => {
-                map[emp.id] = emp;
-              });
-              setEmployeesMap(map);
-            }
-          } catch {
-            // Bỏ qua lỗi nhân viên
-          }
-        }
-      } catch (error) {
-        console.error("Lỗi khi tải dữ liệu dashboard:", error);
-        toast.error("Không thể tải thông tin trang bảng điều khiển");
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-          setIsRefreshing(false);
-        }
+      if ((isAdmin || isEmployee) && isMounted) {
+        await fetchAttendanceData();
       }
     }
-
-    if (isAdmin || isEmployee) {
-      loadData();
-    }
-
+    loadData();
     return () => {
       isMounted = false;
     };
-  }, [isAdmin, isEmployee]);
+  }, [isAdmin, isEmployee, fetchAttendanceData]);
 
-  // Làm mới dữ liệu
+  // Làm mới toàn bộ dashboard
   const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      const [leaveData, attData] = await Promise.all([
-        leaveRequestsServices.getLeaveRequests(),
-        attendanceServices.getAttendance(),
-      ]);
-      setRequests(Array.isArray(leaveData) ? leaveData : []);
-      setAttendances(Array.isArray(attData) ? attData : []);
-      toast.success("Đã làm mới dữ liệu");
-    } catch (error) {
-      console.error("Lỗi khi làm mới dữ liệu:", error);
-      toast.error("Không thể làm mới dữ liệu");
-    } finally {
-      setIsRefreshing(false);
-    }
+    setIsAttRefreshing(true);
+    await Promise.all([handleRefreshLeave(), fetchAttendanceData()]);
   };
+
+  const isLoading = isAttLoading || isLeaveLoading;
+  const isRefreshing = isAttRefreshing || isLeaveRefreshing;
 
   // Quản lý chấm công hôm nay & các hành động Check-in / Check-out qua custom hook
   const {
@@ -119,52 +86,6 @@ export default function DashboardPage() {
     isLoading,
     isRefreshing,
   });
-
-  // Duyệt đơn nghỉ phép (admin)
-  const handleApprove = async (row) => {
-    try {
-      await leaveRequestsServices.updateStatus(row.id, "approved");
-      toast.success(`Đã duyệt đơn nghỉ phép #${row.id}`);
-      setRequests((prev) =>
-        prev.map((item) =>
-          item.id === row.id ? { ...item, status: "approved" } : item,
-        ),
-      );
-    } catch (error) {
-      console.error("Lỗi khi duyệt đơn:", error);
-      toast.error("Duyệt đơn nghỉ phép thất bại");
-    }
-  };
-
-  // Từ chối đơn nghỉ phép (admin)
-  const handleReject = async (row) => {
-    try {
-      await leaveRequestsServices.updateStatus(row.id, "rejected");
-      toast.success(`Đã từ chối đơn nghỉ phép #${row.id}`);
-      setRequests((prev) =>
-        prev.map((item) =>
-          item.id === row.id ? { ...item, status: "rejected" } : item,
-        ),
-      );
-    } catch (error) {
-      console.error("Lỗi khi từ chối đơn:", error);
-      toast.error("Từ chối đơn nghỉ phép thất bại");
-    }
-  };
-
-  // Thống kê nhanh đơn nghỉ
-  const stats = {
-    total: requests.length,
-    pending: requests.filter(
-      (r) => (r.status || "").toLowerCase() === "pending",
-    ).length,
-    approved: requests.filter(
-      (r) => (r.status || "").toLowerCase() === "approved",
-    ).length,
-    rejected: requests.filter(
-      (r) => (r.status || "").toLowerCase() === "rejected",
-    ).length,
-  };
 
   const FILTER_LEAVE_REQUESTS = [
     { id: "all", label: "Tất cả", count: stats.total },
@@ -189,27 +110,40 @@ export default function DashboardPage() {
   ];
 
   // Thống kê điểm danh hôm nay cho admin
-  const todayAdminAttendanceCount = attendances.filter(
-    (a) => a.date === todayStr && a.checkIn,
-  ).length;
+  // const todayAdminAttendanceCount = useMemo(() => {
+  //   const checkInsTodays =  attendances.filter((a) => a.date === todayStr && a.checkIn).map((a) => a.employeeId);
+  //   console.log(checkInsTodays)
+  //   return new Set(checkInsTodays).size
+  // }, [attendances, todayStr]);
+  const todayAdminAttendanceCount = useMemo(() => {
+    if (!isAdmin || !Array.isArray(attendances)) return 0;
 
-  const navigate = useNavigate();
+    const checkInsTodays = attendances
+      .filter((a) => a.date === todayStr && a.checkIn)
+      .map((a) => a.employeeId || a.employee_id)
+      .filter(Boolean);
+
+    return new Set(checkInsTodays).size;
+  }, [attendances, todayStr, isAdmin]);
+
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredRequests = requests.filter((r) => {
-    const status = (r.status || "").toLowerCase();
-    const matchStatus = statusFilter === "all" || status === statusFilter;
-    if (!matchStatus) return false;
+  const filteredRequests = useMemo(() => {
+    return requests.filter((r) => {
+      const status = (r.status || "").toLowerCase();
+      const matchStatus = statusFilter === "all" || status === statusFilter;
+      if (!matchStatus) return false;
 
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase().trim();
-    const emp = employeesMap[r.employeeId];
-    const empName = (emp?.fullName || "").toLowerCase();
-    const reason = (r.reason || "").toLowerCase();
-    const idStr = String(r.id);
-    return empName.includes(q) || reason.includes(q) || idStr.includes(q);
-  });
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase().trim();
+      const emp = employeesMap[r.employeeId];
+      const empName = (emp?.fullName || "").toLowerCase();
+      const reason = (r.reason || "").toLowerCase();
+      const idStr = String(r.id);
+      return empName.includes(q) || reason.includes(q) || idStr.includes(q);
+    });
+  }, [requests, statusFilter, searchQuery, employeesMap]);
 
   if (!isAdmin && !isEmployee) {
     return <NotAuthorPage />;
@@ -288,11 +222,9 @@ export default function DashboardPage() {
       </div>
 
       {/* KHỐI CHẤM CÔNG HÔM NAY DÀNH CHO NHÂN VIÊN */}
-      {isEmployee && (
-        <Attendance {...attendanceProps} />
-      )}
+      {isEmployee && <Attendance {...attendanceProps} />}
 
-      {/* KHỐI CHỈ SỐ & TRẠNG THÁI PHÂN CẤP (Asymmetric Metric Layout - No Card Soup) */}
+      {/* KHỐI CHỈ SỐ & TRẠNG THÁI PHÂN CẤP */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Thẻ chỉ số trọng tâm - 4/12 cột */}
         <div className="lg:col-span-4 bg-canvas p-5 rounded-2xl border border-hairline-soft shadow-xs flex flex-col justify-between">
@@ -423,17 +355,13 @@ export default function DashboardPage() {
             </h2>
           </div>
 
-          {/* Ô tìm kiếm bảng danh sách */}
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Lọc theo nhân viên, lý do..."
-              className="w-full bg-canvas pl-9 pr-3 py-1.5 text-xs text-ink rounded-lg border border-hairline-soft focus:border-primary outline-none transition-all placeholder:text-stone shadow-2xs"
-            />
-          </div>
+          {/* Ô tìm kiếm bảng danh sách dùng chung SearchInput */}
+          <SearchInput
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Lọc theo nhân viên, lý do..."
+            containerClassName="w-full sm:w-64 max-w-none"
+          />
         </div>
 
         {/* Thanh Tab chuyển trạng thái (Interactive Filter Tabs) */}

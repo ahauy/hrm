@@ -9,7 +9,7 @@ export default function BatchFinalizeModal({
   onClose,
   unfinalizedEmployees = [],
   month,
-  standardWorkDays = 26,
+  standardWorkDays = 22,
   onConfirmBatch,
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
