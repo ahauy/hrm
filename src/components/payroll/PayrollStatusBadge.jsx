@@ -4,7 +4,7 @@ import { cn } from "../../utils/cn.js";
 /**
  * Badge hiển thị trạng thái ngày công (Đủ công / Thiếu công)
  */
-export function WorkDaysBadge({ actual = 0, standard = 26, className }) {
+export function WorkDaysBadge({ actual = 0, standard = 22, className }) {
   const isEnough = Number(actual) >= Number(standard);
 
   if (isEnough) {

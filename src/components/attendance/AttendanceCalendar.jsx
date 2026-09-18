@@ -1,11 +1,9 @@
 import { useState, useMemo } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Calendar as CalendarIcon,
-} from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { formatTime } from "../../utils/formatTime.js";
 import { calculateMonthlyStats } from "../../utils/attendanceCalculator.js";
+import { useMonthNavigator } from "../../hooks/useMonthNavigator.js";
+import MonthNavigator from "../common/MonthNavigator.jsx";
 import { cn } from "../../utils/cn.js";
 import DayAttendanceDetailModal from "./DayAttendanceDetailModal.jsx";
 
@@ -24,9 +22,17 @@ export default function AttendanceCalendar({
   employee = null,
   standardWorkDays = 22,
 }) {
+  const {
+    year: currentYear,
+    month: currentMonth,
+    formattedMonth,
+    isCurrentMonth,
+    handlePrevMonth,
+    handleNextMonth,
+    handleCurrentMonth,
+  } = useMonthNavigator();
+
   const today = useMemo(() => new Date(), []);
-  const [currentYear, setCurrentYear] = useState(() => today.getFullYear());
-  const [currentMonth, setCurrentMonth] = useState(() => today.getMonth() + 1);
   const [selectedDayDetail, setSelectedDayDetail] = useState(null);
 
   // Tính toán thống kê cho tháng đang chọn
@@ -38,30 +44,6 @@ export default function AttendanceCalendar({
       standardWorkDays
     );
   }, [attendances, currentYear, currentMonth, standardWorkDays]);
-
-  // Xử lý chuyển tháng
-  const handlePrevMonth = () => {
-    if (currentMonth === 1) {
-      setCurrentYear((prev) => prev - 1);
-      setCurrentMonth(12);
-    } else {
-      setCurrentMonth((prev) => prev - 1);
-    }
-  };
-
-  const handleNextMonth = () => {
-    if (currentMonth === 12) {
-      setCurrentYear((prev) => prev + 1);
-      setCurrentMonth(1);
-    } else {
-      setCurrentMonth((prev) => prev + 1);
-    }
-  };
-
-  const handleCurrentMonth = () => {
-    setCurrentYear(today.getFullYear());
-    setCurrentMonth(today.getMonth() + 1);
-  };
 
   // Tính ngày đầu tiên của tháng rơi vào thứ mấy (0 = Sun, 1 = Mon,... 6 = Sat)
   // Quy đổi để Thứ 2 là cột 0, Chủ Nhật là cột 6
@@ -114,40 +96,14 @@ export default function AttendanceCalendar({
         </div>
 
         {/* Cụm nút chuyển tháng */}
-        <div className="flex items-center gap-2 self-start md:self-auto">
-          <button
-            type="button"
-            onClick={handlePrevMonth}
-            aria-label="Tháng trước"
-            className="p-2 rounded-xl border border-hairline hover:bg-surface-soft active:scale-[0.97] transition-all text-charcoal cursor-pointer"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          <div className="px-4 py-1.5 rounded-xl border border-hairline bg-canvas font-bold text-sm text-ink-deep min-w-[150px] text-center shadow-2xs font-mono">
-            Tháng {String(currentMonth).padStart(2, "0")} / {currentYear}
-          </div>
-
-          <button
-            type="button"
-            onClick={handleNextMonth}
-            aria-label="Tháng sau"
-            className="p-2 rounded-xl border border-hairline hover:bg-surface-soft active:scale-[0.97] transition-all text-charcoal cursor-pointer"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-
-          {(currentYear !== today.getFullYear() ||
-            currentMonth !== today.getMonth() + 1) && (
-            <button
-              type="button"
-              onClick={handleCurrentMonth}
-              className="ml-1 text-xs font-semibold text-primary hover:text-primary-deep px-3 py-2 rounded-xl border border-primary/30 hover:bg-primary/5 transition-all cursor-pointer"
-            >
-              Hôm nay
-            </button>
-          )}
-        </div>
+        <MonthNavigator
+          formattedMonth={formattedMonth}
+          onPrev={handlePrevMonth}
+          onNext={handleNextMonth}
+          onCurrent={handleCurrentMonth}
+          isCurrent={isCurrentMonth}
+          className="self-start md:self-auto"
+        />
       </div>
 
       {/* 2. Thẻ KPI Tóm tắt tháng */}

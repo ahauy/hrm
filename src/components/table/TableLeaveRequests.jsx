@@ -1,4 +1,5 @@
 import Table from "./Table";
+import StatusBadge from "../common/StatusBadge.jsx";
 import { Check, X, Calendar, Clock, User } from "lucide-react";
 import { formatDate } from "../../utils/formatTime.js";
 
@@ -17,34 +18,6 @@ export default function TableLeaveRequests({
   emptyAction,
   pagination,
 }) {
-  // Trạng thái badge chuẩn tokens Meta
-  const renderStatus = (status) => {
-    const normalized = (status || "").toLowerCase();
-    switch (normalized) {
-      case "approved":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-success/10 text-[#227c37] border border-success/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-success"></span>
-            Đã duyệt
-          </span>
-        );
-      case "rejected":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-critical/10 text-critical border border-critical/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-critical"></span>
-            Từ chối
-          </span>
-        );
-      case "pending":
-      default:
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-attention/10 text-[#a06800] border border-attention/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-attention"></span>
-            Chờ duyệt
-          </span>
-        );
-    }
-  };
 
   // Cấu hình các cột hiển thị
   const columns = [
@@ -124,7 +97,7 @@ export default function TableLeaveRequests({
       header: "Trạng thái",
       accessor: "status",
       align: "center",
-      render: (status) => renderStatus(status),
+      render: (status) => <StatusBadge status={status} />,
     },
     // Cột hành động (chỉ hiện nút thao tác cho Admin)
     ...(isAdmin

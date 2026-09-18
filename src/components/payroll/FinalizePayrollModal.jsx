@@ -16,7 +16,7 @@ function FinalizePayrollContent({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const baseSalary = Number(employeeData.baseSalary) || 0;
-  const standardWorkDays = Number(employeeData.standardWorkDays) || 26;
+  const standardWorkDays = Number(employeeData.standardWorkDays) || 22;
   const actualWorkDays = Number(employeeData.actualWorkDays) || 0;
 
   const currentSalary = calculatePayroll({

@@ -2,27 +2,30 @@ import { useState, useMemo } from "react";
 import Table from "../table/Table.jsx";
 import { formatCurrency } from "../../utils/formatCurrency.js";
 import { WorkDaysBadge, PayrollStatusBadge } from "./PayrollStatusBadge.jsx";
+import { usePagination } from "../../hooks/usePagination.js";
+import SearchInput from "../common/SearchInput.jsx";
+import { cn } from "../../utils/cn.js";
 import {
   CheckCircle,
   Edit3,
   RefreshCw,
-  Search,
   Filter,
   User,
   MessageSquare,
+  Eye,
 } from "lucide-react";
 
 export default function AdminPayrollTable({
   payrollData = [],
-  standardWorkDays = 26,
+  standardWorkDays = 22,
   isLoading = false,
   onOpenFinalize,
   onOpenEdit,
   onOpenRecalculate,
+  onOpenViewPayslip,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'finalized' | 'pending' | 'enough' | 'lack'
-  const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
   // Lọc dữ liệu theo từ khóa tìm kiếm và bộ lọc trạng thái
@@ -38,11 +41,12 @@ export default function AdminPayrollTable({
 
       if (!matchSearch) return false;
 
-      const isFinalized = Boolean(item.isFinalized || item.payrollId || item.finalSalary !== undefined);
+      const isFinalized = Boolean(item.isFinalized || item.payrollId || item.totalPay !== undefined || item.finalSalary !== undefined);
       const isEnoughWorkDays = Number(item.actualWorkDays || 0) >= Number(item.standardWorkDays || standardWorkDays);
 
       if (statusFilter === "finalized") return isFinalized;
       if (statusFilter === "pending") return !isFinalized;
+      if (statusFilter === "attendance_changed") return Boolean(item.isFinalized && item.hasAttendanceChanged);
       if (statusFilter === "enough") return isEnoughWorkDays;
       if (statusFilter === "lack") return !isEnoughWorkDays;
 
@@ -50,12 +54,18 @@ export default function AdminPayrollTable({
     });
   }, [payrollData, searchTerm, statusFilter, standardWorkDays]);
 
-  // Phân trang
-  const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredData.slice(start, start + pageSize);
-  }, [filteredData, currentPage, pageSize]);
+  // Phân trang qua custom hook
+  const {
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    paginatedData,
+  } = usePagination(filteredData, pageSize);
+
+  // Số lượng nhân viên có cập nhật công mới
+  const attendanceChangedCount = useMemo(() => {
+    return payrollData.filter((i) => i.isFinalized && i.hasAttendanceChanged).length;
+  }, [payrollData]);
 
   // Định nghĩa các cột cho Table.jsx
   const columns = useMemo(
@@ -95,6 +105,15 @@ export default function AdminPayrollTable({
                 / {standard} ngày
               </span>
               <WorkDaysBadge actual={actual} standard={standard} />
+              {row.isFinalized && row.hasAttendanceChanged && (
+                <span
+                  title={`Dữ liệu chấm công hiện tại là ${row.liveActualWorkDays} ngày (${row.deltaDays > 0 ? `+${row.deltaDays}` : row.deltaDays} ngày so với bản chốt). Cần chốt lại!`}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-attention/20 text-[#a06800] border border-attention/35 cursor-help"
+                >
+                  <span>⚡ Mới: {row.liveActualWorkDays} công</span>
+                  <span>({row.deltaDays > 0 ? `+${row.deltaDays}` : row.deltaDays})</span>
+                </span>
+              )}
             </div>
           );
         },
@@ -149,8 +168,10 @@ export default function AdminPayrollTable({
         accessor: "finalSalary",
         align: "right",
         render: (_, row) => {
-          const isFinalized = Boolean(row.isFinalized || row.payrollId || row.finalSalary !== undefined);
-          const salary = isFinalized ? row.finalSalary : row.expectedSalary || row.calculatedSalary;
+          const isFinalized = Boolean(row.isFinalized || row.payrollId || row.totalPay !== undefined || row.finalSalary !== undefined);
+          const salary = isFinalized
+            ? (row.totalPay ?? row.finalSalary ?? 0)
+            : (row.expectedSalary ?? row.calculatedSalary ?? 0);
 
           return (
             <div className="flex flex-col items-end">
@@ -174,7 +195,7 @@ export default function AdminPayrollTable({
         align: "center",
         render: (_, row) => (
           <PayrollStatusBadge
-            isFinalized={Boolean(row.isFinalized || row.payrollId || row.finalSalary !== undefined)}
+            isFinalized={Boolean(row.isFinalized || row.payrollId || row.totalPay !== undefined || row.finalSalary !== undefined)}
           />
         ),
       },
@@ -182,7 +203,7 @@ export default function AdminPayrollTable({
         header: "Thao tác",
         align: "center",
         render: (_, row) => {
-          const isFinalized = Boolean(row.isFinalized || row.payrollId || row.finalSalary !== undefined);
+          const isFinalized = Boolean(row.isFinalized || row.payrollId || row.totalPay !== undefined || row.finalSalary !== undefined);
 
           if (!isFinalized) {
             return (
@@ -199,6 +220,17 @@ export default function AdminPayrollTable({
 
           return (
             <div className="flex items-center justify-center gap-1.5">
+              {onOpenViewPayslip && (
+                <button
+                  type="button"
+                  onClick={() => onOpenViewPayslip(row)}
+                  title="Xem chi tiết phiếu lương của nhân viên này"
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-hairline hover:bg-primary/5 text-primary hover:text-primary-deep text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Xem phiếu</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => onOpenEdit(row)}
@@ -206,15 +238,30 @@ export default function AdminPayrollTable({
                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-hairline hover:bg-surface-soft text-slate hover:text-ink text-xs font-medium transition-colors cursor-pointer"
               >
                 <Edit3 className="w-3.5 h-3.5 text-stone" />
-                <span>Sửa điều chỉnh</span>
+                <span>Sửa</span>
               </button>
               <button
                 type="button"
                 onClick={() => onOpenRecalculate(row)}
-                title="Tính lại từ đầu theo dữ liệu chấm công mới nhất"
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-hairline hover:bg-attention/10 text-slate hover:text-[#a06800] text-xs font-medium transition-colors cursor-pointer"
+                title={
+                  row.hasAttendanceChanged
+                    ? `Dữ liệu chấm công đã thay đổi: từ ${row.finalizedActualWorkDays} công thành ${row.liveActualWorkDays} công. Bấm để tính lại toàn bộ!`
+                    : "Tính lại từ đầu theo dữ liệu chấm công mới nhất"
+                }
+                className={cn(
+                  "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer",
+                  row.hasAttendanceChanged
+                    ? "bg-attention/20 border-attention/50 text-[#a06800] hover:bg-attention/30 font-semibold shadow-2xs"
+                    : "border-hairline hover:bg-attention/10 text-slate hover:text-[#a06800]"
+                )}
               >
-                <RefreshCw className="w-3.5 h-3.5 text-attention" />
+                <RefreshCw
+                  className={cn(
+                    "w-3.5 h-3.5 text-attention",
+                    row.hasAttendanceChanged && "animate-spin text-attention"
+                  )}
+                  style={row.hasAttendanceChanged ? { animationDuration: "3s" } : undefined}
+                />
                 <span>Chốt lại</span>
               </button>
             </div>
@@ -222,26 +269,22 @@ export default function AdminPayrollTable({
         },
       },
     ],
-    [standardWorkDays, onOpenFinalize, onOpenEdit, onOpenRecalculate]
+    [standardWorkDays, onOpenFinalize, onOpenEdit, onOpenRecalculate, onOpenViewPayslip]
   );
 
   return (
     <div className="space-y-3">
       {/* Search & Filter Toolbar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            placeholder="Tìm theo tên, mã NV hoặc phòng ban..."
-            className="w-full pl-9 pr-4 py-2 bg-canvas border border-hairline rounded-xl text-ink text-xs focus:border-primary outline-none transition-all placeholder:text-stone shadow-2xs"
-          />
-        </div>
+        <SearchInput
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1);
+          }}
+          placeholder="Tìm theo tên, mã NV hoặc phòng ban..."
+          containerClassName="w-full sm:w-80 max-w-none"
+        />
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <div className="flex items-center gap-1.5 bg-canvas border border-hairline rounded-xl px-2 py-1 shadow-2xs w-full sm:w-auto">
@@ -255,6 +298,11 @@ export default function AdminPayrollTable({
               className="bg-transparent text-xs text-slate font-medium py-1 pr-2 outline-none cursor-pointer"
             >
               <option value="all">Tất cả trạng thái</option>
+              {attendanceChangedCount > 0 && (
+                <option value="attendance_changed">
+                  ⚡ Có cập nhật công mới ({attendanceChangedCount})
+                </option>
+              )}
               <option value="pending">Chưa chốt lương</option>
               <option value="finalized">Đã chốt lương</option>
               <option value="enough">Đủ ngày công</option>

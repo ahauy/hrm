@@ -10,12 +10,11 @@ import {
 } from "lucide-react";
 import SidebarItem from "../components/Sidebar/SidebarItem.jsx";
 import { cn } from "../utils/cn.js";
-import { useAuthStore } from "../stores/useAuthStore.js";
+import { useAuth } from "../hooks/useAuth.js";
 
 export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
-  const profile = useAuthStore((s) => s.profile);
-  const isAdmin = Boolean(profile?.role?.trim().toLowerCase().includes("admin"));
+  const { isAdmin } = useAuth();
 
   const navGroups = [
     {
@@ -37,7 +36,11 @@ export default function Sidebar({ isOpen, onClose }) {
     {
       title: "Tài chính",
       items: [
-        { icon: Wallet, label: "Bảng lương & Công", to: "/payroll" },
+        {
+          icon: Wallet,
+          label: isAdmin ? "Bảng lương & Công" : "Phiếu lương",
+          to: "/payroll",
+        },
       ],
     },
     {
