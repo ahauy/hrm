@@ -16,7 +16,7 @@ export default function AttendanceMatrixView({
   onSelectDayModal,
 }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto w-full">
       <table className="w-full text-left border-collapse min-w-[1250px]">
         <thead>
           <tr className="border-b border-hairline-soft bg-surface-soft/70 text-[11px] font-bold text-stone uppercase select-none">
@@ -104,6 +104,26 @@ export default function AttendanceMatrixView({
                 {renderSortIcon("missing")}
               </div>
             </th>
+            <th
+              scope="col"
+              onClick={() => onSort("underHours")}
+              className="py-3 px-2 text-center cursor-pointer hover:text-ink min-w-[75px]"
+            >
+              <div className="flex items-center justify-center">
+                <span>Thiếu giờ</span>
+                {renderSortIcon("underHours")}
+              </div>
+            </th>
+            <th
+              scope="col"
+              onClick={() => onSort("absent")}
+              className="py-3 px-2 text-center cursor-pointer hover:text-ink min-w-[65px]"
+            >
+              <div className="flex items-center justify-center">
+                <span>Vắng</span>
+                {renderSortIcon("absent")}
+              </div>
+            </th>
             <th scope="col" className="py-3 px-4 text-right min-w-[90px]">
               Thao tác
             </th>
@@ -114,7 +134,7 @@ export default function AttendanceMatrixView({
           {employees.length === 0 ? (
             <tr>
               <td
-                colSpan={monthDayList.length + 6}
+                colSpan={monthDayList.length + 8}
                 className="py-12 text-center text-stone"
               >
                 <AlertCircle className="w-8 h-8 mx-auto mb-2 text-stone/60" />
@@ -202,23 +222,23 @@ export default function AttendanceMatrixView({
                           className={cn(
                             "w-7.5 h-7.5 mx-auto rounded-lg flex items-center justify-center font-mono text-[10px] font-bold transition-all select-none",
                             key === "ON_TIME"
-                              ? "bg-success/15 hover:bg-success/25 text-[#15692f] border border-success/30 cursor-pointer shadow-2xs"
+                              ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 cursor-pointer shadow-2xs"
                               : key === "LATE_GRACE"
-                              ? "bg-attention/20 hover:bg-attention/30 text-[#8a5700] border border-attention/40 cursor-pointer shadow-2xs"
+                              ? "bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 cursor-pointer shadow-2xs"
                               : key === "LATE_PENALTY"
-                              ? "bg-warning/25 hover:bg-warning/35 text-[#914600] border border-warning/50 cursor-pointer shadow-2xs"
+                              ? "bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-300 cursor-pointer shadow-2xs"
                               : key === "HALF_DAY"
-                              ? "bg-purple-100 hover:bg-purple-200 text-purple-700 border border-purple-300 cursor-pointer shadow-2xs"
+                              ? "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-300 cursor-pointer shadow-2xs"
                               : key === "IN_PROGRESS"
-                              ? "bg-primary/15 hover:bg-primary/25 text-primary border border-primary/40 cursor-pointer animate-pulse"
+                              ? "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-300 cursor-pointer animate-pulse"
                               : key === "MISSING_CHECKOUT"
-                              ? "bg-critical/15 hover:bg-critical/25 text-critical border border-critical/40 cursor-pointer shadow-2xs"
+                              ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 cursor-pointer shadow-2xs font-bold"
                               : key === "UNDER_HOURS"
-                              ? "bg-critical/10 hover:bg-critical/20 text-critical border border-critical/30 cursor-pointer"
+                              ? "bg-fuchsia-50 hover:bg-fuchsia-100 text-fuchsia-800 border border-fuchsia-300 cursor-pointer shadow-2xs"
                               : key === "ABSENT"
-                              ? "bg-surface-soft text-stone/70 border border-hairline-soft/40 cursor-pointer hover:bg-stone/15"
+                              ? "bg-slate-100 text-slate-600 border border-slate-300/80 cursor-pointer hover:bg-slate-200"
                               : key === "NOT_CHECKED_IN"
-                              ? "bg-attention/10 text-attention border border-attention/30 cursor-pointer hover:bg-attention/20"
+                              ? "bg-teal-50 text-teal-800 border border-teal-300 cursor-pointer hover:bg-teal-100"
                               : day.isWeekend
                               ? "bg-surface-soft/40 text-stone/40 border border-transparent cursor-default"
                               : "bg-transparent text-stone/25 cursor-default"
@@ -260,14 +280,14 @@ export default function AttendanceMatrixView({
                   </td>
 
                   <td className="py-2.5 px-2 text-center">
-                    <span className="inline-flex items-center justify-center min-w-[28px] px-1.5 py-0.5 rounded-md bg-success/10 text-success font-bold font-mono text-[11px] border border-success/20">
+                    <span className="inline-flex items-center justify-center min-w-[28px] px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 font-bold font-mono text-[11px] border border-emerald-500/20">
                       {stats.onTimeDays}
                     </span>
                   </td>
 
                   <td className="py-2.5 px-2 text-center">
                     {stats.lateDays > 0 ? (
-                      <span className="inline-flex items-center justify-center min-w-[28px] px-1.5 py-0.5 rounded-md bg-attention/15 text-attention font-bold font-mono text-[11px] border border-attention/30">
+                      <span className="inline-flex items-center justify-center min-w-[28px] px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-800 font-bold font-mono text-[11px] border border-amber-500/30">
                         {stats.lateDays}
                       </span>
                     ) : (
@@ -277,8 +297,28 @@ export default function AttendanceMatrixView({
 
                   <td className="py-2.5 px-2 text-center">
                     {stats.missingCheckOutDays > 0 ? (
-                      <span className="inline-flex items-center justify-center min-w-[28px] px-1.5 py-0.5 rounded-md bg-critical/15 text-critical font-bold font-mono text-[11px] border border-critical/30">
+                      <span className="inline-flex items-center justify-center min-w-[28px] px-1.5 py-0.5 rounded-md bg-rose-500/15 text-rose-700 font-bold font-mono text-[11px] border border-rose-500/30">
                         {stats.missingCheckOutDays}
+                      </span>
+                    ) : (
+                      <span className="text-stone font-mono text-[11px]">0</span>
+                    )}
+                  </td>
+
+                  <td className="py-2.5 px-2 text-center">
+                    {stats.underHoursDays > 0 ? (
+                      <span className="inline-flex items-center justify-center min-w-[28px] px-1.5 py-0.5 rounded-md bg-fuchsia-500/15 text-fuchsia-800 font-bold font-mono text-[11px] border border-fuchsia-500/30">
+                        {stats.underHoursDays}
+                      </span>
+                    ) : (
+                      <span className="text-stone font-mono text-[11px]">0</span>
+                    )}
+                  </td>
+
+                  <td className="py-2.5 px-2 text-center">
+                    {stats.absentDays > 0 ? (
+                      <span className="inline-flex items-center justify-center min-w-[28px] px-1.5 py-0.5 rounded-md bg-slate-200/80 text-slate-700 font-bold font-mono text-[11px] border border-slate-300">
+                        {stats.absentDays}
                       </span>
                     ) : (
                       <span className="text-stone font-mono text-[11px]">0</span>

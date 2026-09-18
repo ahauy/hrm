@@ -119,7 +119,7 @@ export default function AttendancePage() {
   }
 
   return (
-    <div className="space-y-6 pb-12 max-w-7xl mx-auto">
+    <div className="space-y-6 pb-12 w-full min-w-0 animate-in fade-in duration-200">
       {/* 1. Tiêu đề trang & Thanh điều khiển */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -209,7 +209,7 @@ export default function AttendancePage() {
         </div>
       ) : isAdmin && adminViewMode === "employees" ? (
         /* GÓC NHÌN ADMIN: BẢNG TOÀN BỘ NHÂN VIÊN VÀ MODAL CALENDAR */
-        <div>
+        <div className="w-full min-w-0">
           <AdminAttendanceTable
             employees={employees}
             attendances={attendances}

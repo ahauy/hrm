@@ -37,8 +37,8 @@ export default function MainLayout({ children }) {
 
         <main
           className={cn(
-            "flex-1 min-h-screen flex flex-col transition-all duration-300 w-full",
-            isSidebarOpen ? "lg:ml-72" : "lg:ml-0"
+            "flex-1 min-h-screen flex flex-col transition-all duration-300 min-w-0 w-full",
+            isSidebarOpen ? "lg:ml-72 lg:w-[calc(100%-18rem)]" : "lg:ml-0"
           )}
         >
           <Header
@@ -46,7 +46,7 @@ export default function MainLayout({ children }) {
             onToggle={() => setIsSidebarOpen((prev) => !prev)}
           />
 
-          <div className="p-4 sm:p-6 lg:p-8 flex-1 w-full">{children}</div>
+          <div className="p-4 sm:p-6 lg:p-8 flex-1 w-full min-w-0">{children}</div>
         </main>
       </div>
     </>

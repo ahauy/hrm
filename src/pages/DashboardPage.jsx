@@ -369,8 +369,8 @@ export default function DashboardPage() {
 
       {/* Bảng danh sách đơn nghỉ phép với Filter Tabs & Search */}
       <div className="space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 shrink-0">
             <CalendarCheck className="w-4.5 h-4.5 text-steel" />
             <h2 className="text-sm font-bold text-ink-deep">
               {isAdmin
@@ -379,49 +379,51 @@ export default function DashboardPage() {
             </h2>
           </div>
 
-          {/* Ô tìm kiếm bảng danh sách dùng chung SearchInput */}
-          <SearchInput
-            value={searchQuery}
-            onChange={handleSearchChange}
-            placeholder={
-              isAdmin
-                ? "Lọc theo nhân viên, lý do..."
-                : "Lọc theo lý do, mã đơn..."
-            }
-            containerClassName="w-full sm:w-72 max-w-none"
-          />
-        </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between xl:justify-end gap-3 w-full xl:w-auto">
+            {/* Ô tìm kiếm bảng danh sách dùng chung SearchInput */}
+            <SearchInput
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder={
+                isAdmin
+                  ? "Lọc theo nhân viên, lý do..."
+                  : "Lọc theo lý do, mã đơn..."
+              }
+              containerClassName="w-full sm:w-64 xl:w-72 max-w-none flex-none"
+            />
 
-        {/* Thanh Tab chuyển trạng thái (Interactive Filter Tabs) */}
-        <div className="flex items-center gap-1.5 p-1 bg-canvas border border-hairline-soft rounded-xl w-fit overflow-x-auto shadow-2xs">
-          {FILTER_LEAVE_REQUESTS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => handleStatusFilterChange(tab.id)}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap",
-                statusFilter === tab.id
-                  ? "bg-surface-soft text-ink-deep font-semibold shadow-2xs"
-                  : "text-steel hover:text-ink hover:bg-surface-soft/60",
-              )}
-            >
-              {tab.dot && (
-                <span className={cn("w-1.5 h-1.5 rounded-full", tab.dot)} />
-              )}
-              <span>{tab.label}</span>
-              <span
-                className={cn(
-                  "font-mono text-[11px] tabular-nums px-1.5 py-0.2 rounded-full",
-                  statusFilter === tab.id
-                    ? "bg-canvas text-ink-deep font-bold"
-                    : "text-stone",
-                )}
-              >
-                {tab.count}
-              </span>
-            </button>
-          ))}
+            {/* Thanh Tab chuyển trạng thái (Interactive Filter Tabs) */}
+            <div className="flex items-center gap-1.5 p-1 bg-canvas border border-hairline-soft rounded-xl overflow-x-auto shadow-2xs shrink-0">
+              {FILTER_LEAVE_REQUESTS.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => handleStatusFilterChange(tab.id)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap",
+                    statusFilter === tab.id
+                      ? "bg-surface-soft text-ink-deep font-semibold shadow-2xs"
+                      : "text-steel hover:text-ink hover:bg-surface-soft/60",
+                  )}
+                >
+                  {tab.dot && (
+                    <span className={cn("w-1.5 h-1.5 rounded-full", tab.dot)} />
+                  )}
+                  <span>{tab.label}</span>
+                  <span
+                    className={cn(
+                      "font-mono text-[11px] tabular-nums px-1.5 py-0.2 rounded-full",
+                      statusFilter === tab.id
+                        ? "bg-canvas text-ink-deep font-bold"
+                        : "text-stone",
+                    )}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <TableLeaveRequests

@@ -107,16 +107,17 @@ export default function AttendanceCalendar({
       </div>
 
       {/* 2. Thẻ KPI Tóm tắt tháng */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-hairline-soft border-b border-hairline-soft bg-canvas">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-y sm:divide-y-0 sm:divide-x divide-hairline-soft bg-canvas">
+        {/* Thẻ 1: Tổng công tích lũy */}
         <div className="p-4 sm:p-5">
           <div className="text-[11px] font-bold text-stone uppercase tracking-wider">
-            Tổng số công tích lũy
+            Tổng ngày công
           </div>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-ink-deep font-mono tabular-nums">
+          <div className="mt-1 flex items-baseline gap-1.5 font-mono">
+            <span className="text-2xl font-black text-ink-deep">
               {monthStats.totalWorkUnits}
             </span>
-            <span className="text-xs font-semibold text-steel">
+            <span className="text-xs text-steel font-medium">
               / {monthStats.standardWorkDays} công chuẩn
             </span>
           </div>
@@ -134,6 +135,7 @@ export default function AttendanceCalendar({
           </div>
         </div>
 
+        {/* Thẻ 2: Đúng giờ */}
         <div className="p-4 sm:p-5">
           <div className="text-[11px] font-bold text-stone uppercase tracking-wider flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-success" />
@@ -148,6 +150,7 @@ export default function AttendanceCalendar({
           <p className="text-[11px] text-stone mt-1">Check-in trước 08:30</p>
         </div>
 
+        {/* Thẻ 3: Đi muộn */}
         <div className="p-4 sm:p-5">
           <div className="text-[11px] font-bold text-stone uppercase tracking-wider flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-attention" />
@@ -159,9 +162,10 @@ export default function AttendanceCalendar({
             </span>
             <span className="text-xs text-steel font-medium">lần</span>
           </div>
-          <p className="text-[11px] text-stone mt-1">Gồm ân hạn & phạt trừ</p>
+          <p className="text-[11px] text-stone mt-1">Check-in sau 08:30</p>
         </div>
 
+        {/* Thẻ 4: Thiếu Check-out */}
         <div className="p-4 sm:p-5">
           <div className="text-[11px] font-bold text-stone uppercase tracking-wider flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-critical" />
@@ -175,6 +179,36 @@ export default function AttendanceCalendar({
           </div>
           <p className="text-[11px] text-stone mt-1">Tính 0 công (Cần giải trình)</p>
         </div>
+
+        {/* Thẻ 5: Thiếu giờ (< 4h) */}
+        <div className="p-4 sm:p-5">
+          <div className="text-[11px] font-bold text-stone uppercase tracking-wider flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-critical/70" />
+            Thiếu giờ (&lt; 4h)
+          </div>
+          <div className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-2xl font-black text-critical font-mono tabular-nums">
+              {monthStats.underHoursDays || 0}
+            </span>
+            <span className="text-xs text-steel font-medium">ngày</span>
+          </div>
+          <p className="text-[11px] text-stone mt-1">Làm dưới 4 tiếng (0 công)</p>
+        </div>
+
+        {/* Thẻ 6: Vắng mặt */}
+        <div className="p-4 sm:p-5">
+          <div className="text-[11px] font-bold text-stone uppercase tracking-wider flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-stone" />
+            Vắng mặt
+          </div>
+          <div className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-2xl font-black text-steel font-mono tabular-nums">
+              {monthStats.absentDays || 0}
+            </span>
+            <span className="text-xs text-steel font-medium">ngày</span>
+          </div>
+          <p className="text-[11px] text-stone mt-1">Ngày làm việc không chấm</p>
+        </div>
       </div>
 
       {/* 3. Dải chú thích trạng thái (Legend) */}
@@ -183,32 +217,40 @@ export default function AttendanceCalendar({
           Quy chuẩn:
         </span>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-success ring-2 ring-success/20" />
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20" />
           <span className="text-ink font-medium">Đúng giờ (1.0)</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-attention ring-2 ring-attention/20" />
+          <span className="w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-amber-500/20" />
           <span className="text-ink font-medium">Muộn ≤ 15p (1.0)</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-warning ring-2 ring-warning/20" />
+          <span className="w-2.5 h-2.5 rounded-full bg-orange-500 ring-2 ring-orange-500/20" />
           <span className="text-ink font-medium">Muộn 15-60p (0.75)</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-purple-500 ring-2 ring-purple-500/20" />
+          <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 ring-2 ring-indigo-500/20" />
           <span className="text-ink font-medium">Nửa công / Muộn &gt; 60p (0.5)</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-primary/20 animate-pulse" />
+          <span className="w-2.5 h-2.5 rounded-full bg-blue-500 ring-2 ring-blue-500/20 animate-pulse" />
           <span className="text-ink font-medium">Đang trong ca</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-critical ring-2 ring-critical/20" />
-          <span className="text-ink font-medium">Thiếu check-out (0 công)</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-rose-600 ring-2 ring-rose-500/20" />
+          <span className="text-ink font-medium text-rose-700 font-semibold">Thiếu check-out (0 công)</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-stone ring-2 ring-stone/20" />
+          <span className="w-2.5 h-2.5 rounded-full bg-fuchsia-600 ring-2 ring-fuchsia-500/20" />
+          <span className="text-ink font-medium text-fuchsia-800">Thiếu giờ (&lt; 4h) (0 công)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-500 ring-2 ring-slate-400/20" />
           <span className="text-ink font-medium">Vắng mặt</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-teal-500 ring-2 ring-teal-500/20" />
+          <span className="text-ink font-medium">Chưa chấm công</span>
         </div>
       </div>
 
@@ -345,10 +387,10 @@ export default function AttendanceCalendar({
                         <span
                           className={cn(
                             data.isMissingCheckout
-                              ? "text-critical font-bold"
+                              ? "text-rose-600 font-bold"
                               : data.checkOutTime
                               ? "text-steel font-medium"
-                              : "text-primary font-bold animate-pulse"
+                              : "text-blue-600 font-bold animate-pulse"
                           )}
                         >
                           {data.checkOutTime
@@ -382,15 +424,15 @@ export default function AttendanceCalendar({
                     </span>
                   ) : statusConfig.key === "ABSENT" ? (
                     <div className="flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-stone shrink-0" />
-                      <span className="text-[10px] text-stone font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
+                      <span className="text-[10px] text-slate-500 font-medium">
                         Vắng mặt
                       </span>
                     </div>
                   ) : statusConfig.key === "NOT_CHECKED_IN" ? (
                     <div className="flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-attention shrink-0" />
-                      <span className="text-[10px] text-attention font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0" />
+                      <span className="text-[10px] text-teal-700 font-medium">
                         Chưa chấm
                       </span>
                     </div>
