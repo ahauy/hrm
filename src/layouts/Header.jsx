@@ -1,5 +1,5 @@
 import { Menu, Search, Mail, Bell } from "lucide-react";
-import UserProfile from "../components/user/UserProfile.jsx";
+import UserProfile from "@/components/user/UserProfile";
 
 export default function Header({ onToggle }) {
   return (

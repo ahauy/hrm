@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { leaveRequestsServices } from "../services/leaveRequestsServices.js";
-import { employeeServices } from "../services/employeeServices.js";
+import { leaveRequestsServices } from "@/services/leaveRequestsServices";
+import { employeeServices } from "@/services/employeeServices";
 import { toast } from "sonner";
 
 /**

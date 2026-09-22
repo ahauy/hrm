@@ -8,9 +8,9 @@ import {
   Settings,
   X,
 } from "lucide-react";
-import SidebarItem from "../components/Sidebar/SidebarItem.jsx";
-import { cn } from "../utils/cn.js";
-import { useAuth } from "../hooks/useAuth.js";
+import SidebarItem from "@/components/Sidebar/SidebarItem";
+import { cn } from "@/utils/cn";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation();

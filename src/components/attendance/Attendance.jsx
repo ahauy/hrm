@@ -7,8 +7,8 @@ import {
   Clock,
   AlertTriangle,
 } from "lucide-react";
-import { formatTime, getWorkDuration } from "../../utils/formatTime";
-import { cn } from "../../utils/cn";
+import { formatTime, getWorkDuration } from "@/utils/formatTime";
+import { cn } from "@/utils/cn";
 
 export default function Attendance({
   hasCheckedIn,

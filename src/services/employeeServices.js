@@ -1,4 +1,4 @@
-import api from "../utils/axios.js";
+import api from "@/utils/axios";
 
 export const employeeServices = {
   // Lấy danh sách toàn bộ nhân viên (admin only)

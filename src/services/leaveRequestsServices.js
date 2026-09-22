@@ -1,4 +1,4 @@
-import api from "../utils/axios.js";
+import api from "@/utils/axios";
 
 export const leaveRequestsServices = {
   // Lấy danh sách đơn nghỉ phép (nếu là employee: chỉ lấy của mình; nếu là admin: lấy tất cả)

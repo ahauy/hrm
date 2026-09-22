@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
-import { cn } from "../utils/cn.js";
+import { cn } from "@/utils/cn";
 
 export default function MainLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { toast } from "sonner";
-import { attendanceServices } from "../services/attendanceServices.js";
-import { getWorkDuration } from "../utils/formatTime.js";
+import { attendanceServices } from "@/services/attendanceServices";
+import { getWorkDuration } from "@/utils/formatTime";
 
 /**
  * Custom hook quản lý trạng thái chấm công hôm nay & các hành động Check-in / Check-out
