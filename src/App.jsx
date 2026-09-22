@@ -1,16 +1,16 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
-import { useAuth } from "./hooks/useAuth.js";
-import LoginPage from "./pages/LoginPage";
 import { Loader } from "lucide-react";
-import DashboardPage from "./pages/DashboardPage";
-import EmployeesPage from "./pages/EmployeesPage";
-import PayrollPage from "./pages/PayrollPage";
-import LeaveRequestsPage from "./pages/LeaveRequestsPage";
-import AttendancePage from "./pages/AttendancePage";
-import SettingPage from "./pages/SettingPage";
-import ProfilePage from "./pages/ProfilePage";
-import MainLayout from "./layouts/MainLayout";
+import { useAuth } from "@/hooks/useAuth";
+import LoginPage from "@/pages/LoginPage";
+import DashboardPage from "@/pages/DashboardPage";
+import EmployeesPage from "@/pages/EmployeesPage";
+import PayrollPage from "@/pages/PayrollPage";
+import LeaveRequestsPage from "@/pages/LeaveRequestsPage";
+import AttendancePage from "@/pages/AttendancePage";
+import SettingPage from "@/pages/SettingPage";
+import ProfilePage from "@/pages/ProfilePage";
+import MainLayout from "@/layouts/MainLayout";
 
 function App() {
   const { token, isAuthLoading, setAuthLoading } = useAuth();
