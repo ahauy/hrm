@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useLeaveRequests } from "@/hooks/useLeaveRequests";
-import { attendanceServices } from "@/services/attendanceServices";
-import { useAttendanceAction } from "@/hooks/useAttendanceAction";
+import { useLeaveRequests } from "@/pages/LeaveRequestsPage/hooks/useLeaveRequests";
+import { attendanceServices } from "@/pages/AttendancePage/services/attendanceServices";
+import { useAttendanceAction } from "@/pages/AttendancePage/hooks/useAttendanceAction";
 import { usePagination } from "@/hooks/usePagination";
 import NotAuthorPage from "@/pages/NotAuthorPage";
 import TableLeaveRequests from "@/components/table/TableLeaveRequests";

@@ -5,10 +5,10 @@ import Attendance from "@/components/attendance/Attendance";
 import AttendanceCalendar from "./components/AttendanceCalendar";
 import AdminAttendanceTable from "./components/AdminAttendanceTable";
 import EmployeeAttendanceModal from "./dialogs/EmployeeAttendanceModal";
-import { attendanceServices } from "@/services/attendanceServices";
-import { employeeServices } from "@/services/employeeServices";
-import { settingsServices } from "@/services/settingsServices";
-import { useAttendanceAction } from "@/hooks/useAttendanceAction";
+import { attendanceServices } from "./services/attendanceServices";
+import { employeeServices } from "@/pages/EmployeesPage/services/employeeServices";
+import { settingsServices } from "@/pages/SettingPage/services/settingsServices";
+import { useAttendanceAction } from "./hooks/useAttendanceAction";
 import { toast } from "sonner";
 import {
   Users,

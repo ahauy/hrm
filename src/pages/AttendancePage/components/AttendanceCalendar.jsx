@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { formatTime } from "@/utils/formatTime";
 import { calculateMonthlyStats } from "@/utils/attendanceCalculator";
-import { useMonthNavigator } from "@/hooks/useMonthNavigator";
+import { useMonthNavigator } from "../hooks/useMonthNavigator";
 import MonthNavigator from "@/components/common/MonthNavigator";
 import { cn } from "@/utils/cn";
 import DayAttendanceDetailModal from "../dialogs/DayAttendanceDetailModal";

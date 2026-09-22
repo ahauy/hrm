@@ -7,7 +7,7 @@ import {
   List,
 } from "lucide-react";
 import { calculateMonthlyStats } from "@/utils/attendanceCalculator";
-import { useMonthNavigator } from "@/hooks/useMonthNavigator";
+import { useMonthNavigator } from "../hooks/useMonthNavigator";
 import { cn } from "@/utils/cn";
 import SearchInput from "@/components/common/SearchInput";
 import MonthNavigator from "@/components/common/MonthNavigator";

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { settingsServices } from "@/services/settingsServices";
+import { settingsServices } from "./services/settingsServices";
 import { SHIFT_CONFIG } from "@/utils/attendanceCalculator";
 import { Settings, Save, Clock, Shield, CheckCircle2, Building2 } from "lucide-react";
 import { toast } from "sonner";

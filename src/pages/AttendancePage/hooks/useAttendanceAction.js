@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { toast } from "sonner";
-import { attendanceServices } from "@/services/attendanceServices";
+import { attendanceServices } from "../services/attendanceServices";
 import { getWorkDuration } from "@/utils/formatTime";
 
 /**

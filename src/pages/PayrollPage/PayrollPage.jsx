@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import NotAuthorPage from "@/pages/NotAuthorPage";
-import { settingsServices } from "@/services/settingsServices";
+import { settingsServices } from "@/pages/SettingPage/services/settingsServices";
 import { payrollServices } from "./services/payrollServices";
-import { employeeServices } from "@/services/employeeServices";
+import { employeeServices } from "@/pages/EmployeesPage/services/employeeServices";
 import { calculatePayroll } from "@/utils/formatCurrency";
 import AdminPayrollTable from "./components/AdminPayrollTable";
 import EmployeePayrollView from "./components/EmployeePayrollView";
