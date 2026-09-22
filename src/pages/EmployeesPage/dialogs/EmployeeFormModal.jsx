@@ -1,6 +1,4 @@
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { FormikProvider, useFormik } from "formik";
 import {
   UserPlus,
   UserCheck,
@@ -13,17 +11,16 @@ import {
   Calendar,
   Shield,
   Save,
-  AlertCircle,
   Banknote,
 } from "lucide-react";
 import Modal from "@/components/modal/Modal";
+import { InputField, RadioGroupField } from "@/components/form";
 import {
   createEmployeeSchema,
   updateEmployeeSchema,
 } from "@/validators/employee.validator";
 import { employeeServices } from "../services/employeeServices";
 import { toast } from "sonner";
-import { cn } from "@/utils/cn";
 
 /**
  * Modal dùng chung để Thêm mới hoặc Chỉnh sửa thông tin nhân viên
@@ -40,121 +37,98 @@ export default function EmployeeFormModal({
 }) {
   const isEditMode = Boolean(employee);
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm({
-    resolver: zodResolver(
-      isEditMode ? updateEmployeeSchema : createEmployeeSchema
-    ),
-    defaultValues: {
-      username: "",
+  const formik = useFormik({
+    enableReinitialize: true,
+    initialValues: {
+      username: employee?.username || "",
       password: "",
-      fullName: "",
-      email: "",
-      phone: "",
-      position: "",
-      department: "",
-      baseSalary: 0,
-      role: "employee",
-      joinDate: new Date().toISOString().split("T")[0],
+      fullName: employee?.fullName || "",
+      email: employee?.email || "",
+      phone: employee?.phone || "",
+      position: employee?.position || "",
+      department: employee?.department || "",
+      baseSalary: employee?.baseSalary ?? 0,
+      role: employee?.role === "admin" ? "admin" : "employee",
+      joinDate: employee?.joinDate
+        ? employee.joinDate.split("T")[0]
+        : new Date().toISOString().split("T")[0],
+    },
+    validationSchema: isEditMode ? updateEmployeeSchema : createEmployeeSchema,
+    onSubmit: async (values) => {
+      try {
+        if (isEditMode) {
+          // Chế độ chỉnh sửa: Không gửi username, chỉ gửi password nếu người dùng nhập
+          const updatePayload = {
+            fullName: values.fullName.trim(),
+            email: values.email.trim(),
+            phone: values.phone?.trim() || "",
+            position: values.position?.trim() || "",
+            department: values.department?.trim() || "",
+            baseSalary: Number(values.baseSalary) || 0,
+            role: values.role,
+            joinDate: values.joinDate || undefined,
+          };
+
+          if (values.password && values.password.trim() !== "") {
+            updatePayload.password = values.password.trim();
+          }
+
+          await employeeServices.updateEmployee(employee.id, updatePayload);
+          toast.success(`Cập nhật thông tin nhân viên "${values.fullName}" thành công!`);
+        } else {
+          // Chế độ tạo mới: Gửi đầy đủ thông tin chuẩn API
+          const createPayload = {
+            username: values.username.trim(),
+            password: values.password.trim(),
+            fullName: values.fullName.trim(),
+            email: values.email.trim(),
+            phone: values.phone?.trim() || "",
+            position: values.position?.trim() || "",
+            department: values.department?.trim() || "",
+            baseSalary: Number(values.baseSalary) || 0,
+            role: values.role,
+            joinDate: values.joinDate || undefined,
+          };
+
+          await employeeServices.createEmployee(createPayload);
+          toast.success(`Thêm nhân viên mới "${values.fullName}" thành công!`);
+        }
+
+        handleClose();
+        onSuccess?.();
+      } catch (error) {
+        console.error("Lỗi khi lưu nhân viên:", error);
+        const serverMsg =
+          error.response?.data?.message ||
+          (isEditMode
+            ? "Không thể cập nhật thông tin nhân viên"
+            : "Không thể thêm nhân viên mới");
+        toast.error(serverMsg);
+      }
     },
   });
 
-  // Cập nhật giá trị form khi mở modal hoặc thay đổi đối tượng nhân viên
-  useEffect(() => {
-    if (isOpen) {
-      if (employee) {
-        reset({
-          username: employee.username || "",
-          password: "", // Luôn để trống trường mật khẩu khi chỉnh sửa
-          fullName: employee.fullName || "",
-          email: employee.email || "",
-          phone: employee.phone || "",
-          position: employee.position || "",
-          department: employee.department || "",
-          baseSalary: employee.baseSalary ?? 0,
-          role: employee.role === "admin" ? "admin" : "employee",
-          joinDate: employee.joinDate
-            ? employee.joinDate.split("T")[0]
-            : new Date().toISOString().split("T")[0],
-        });
-      } else {
-        reset({
-          username: "",
-          password: "",
-          fullName: "",
-          email: "",
-          phone: "",
-          position: "",
-          department: "",
-          baseSalary: 0,
-          role: "employee",
-          joinDate: new Date().toISOString().split("T")[0],
-        });
-      }
-    }
-  }, [isOpen, employee, reset]);
-
   const handleClose = () => {
-    reset();
+    formik.resetForm();
     onClose?.();
   };
 
-  const onSubmit = async (data) => {
-    try {
-      if (isEditMode) {
-        // Chế độ chỉnh sửa: Không gửi username, chỉ gửi password nếu người dùng nhập
-        const updatePayload = {
-          fullName: data.fullName.trim(),
-          email: data.email.trim(),
-          phone: data.phone?.trim() || "",
-          position: data.position?.trim() || "",
-          department: data.department?.trim() || "",
-          baseSalary: Number(data.baseSalary) || 0,
-          role: data.role,
-          joinDate: data.joinDate || undefined,
-        };
-
-        if (data.password && data.password.trim() !== "") {
-          updatePayload.password = data.password.trim();
-        }
-
-        await employeeServices.updateEmployee(employee.id, updatePayload);
-        toast.success(`Cập nhật thông tin nhân viên "${data.fullName}" thành công!`);
-      } else {
-        // Chế độ tạo mới: Gửi đầy đủ thông tin chuẩn API
-        const createPayload = {
-          username: data.username.trim(),
-          password: data.password.trim(),
-          fullName: data.fullName.trim(),
-          email: data.email.trim(),
-          phone: data.phone?.trim() || "",
-          position: data.position?.trim() || "",
-          department: data.department?.trim() || "",
-          baseSalary: Number(data.baseSalary) || 0,
-          role: data.role,
-          joinDate: data.joinDate || undefined,
-        };
-
-        await employeeServices.createEmployee(createPayload);
-        toast.success(`Thêm nhân viên mới "${data.fullName}" thành công!`);
-      }
-
-      handleClose();
-      onSuccess?.();
-    } catch (error) {
-      console.error("Lỗi khi lưu nhân viên:", error);
-      const serverMsg =
-        error.response?.data?.message ||
-        (isEditMode
-          ? "Không thể cập nhật thông tin nhân viên"
-          : "Không thể thêm nhân viên mới");
-      toast.error(serverMsg);
-    }
-  };
+  const roleOptions = [
+    {
+      value: "employee",
+      label: "Nhân viên thường",
+      description: "Chỉ được chấm công, xin nghỉ và xem bảng lương cá nhân",
+      icon: User,
+      iconClassName: "text-steel",
+    },
+    {
+      value: "admin",
+      label: "Quản trị viên (Admin)",
+      description: "Toàn quyền quản lý nhân viên, duyệt phép, tính lương và cài đặt",
+      icon: Shield,
+      iconClassName: "text-primary",
+    },
+  ];
 
   return (
     <Modal
@@ -179,18 +153,18 @@ export default function EmployeeFormModal({
           <button
             type="button"
             onClick={handleClose}
-            disabled={isSubmitting}
+            disabled={formik.isSubmitting}
             className="px-4 py-2 rounded-xl border border-hairline bg-canvas text-ink hover:bg-surface-soft transition-colors cursor-pointer text-xs font-semibold disabled:opacity-50"
           >
             Hủy
           </button>
           <button
             type="button"
-            onClick={handleSubmit(onSubmit)}
-            disabled={isSubmitting}
+            onClick={formik.handleSubmit}
+            disabled={formik.isSubmitting}
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary-hover active:scale-[0.98] transition-all cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? (
+            {formik.isSubmitting ? (
               <>
                 <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                 <span>Đang lưu...</span>
@@ -205,212 +179,86 @@ export default function EmployeeFormModal({
         </div>
       }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Hàng 1: Tên đăng nhập & Mật khẩu */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Tên đăng nhập */}
-          <div>
-            <label
-              htmlFor="username"
-              className="block text-xs font-semibold text-ink-deep mb-1.5"
-            >
-              Tên đăng nhập <span className="text-critical">*</span>
-            </label>
-            <div className="relative">
-              <User className="w-4 h-4 text-stone absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                id="username"
-                type="text"
-                disabled={isEditMode}
-                {...register("username")}
-                placeholder="VD: nguyenvanan"
-                className={cn(
-                  "w-full pl-9 pr-3 py-2 rounded-xl border bg-canvas text-xs text-ink placeholder:text-stone focus:outline-none transition-all",
-                  isEditMode
-                    ? "bg-surface-soft text-steel cursor-not-allowed border-hairline-soft"
-                    : errors.username
-                    ? "border-critical focus:border-critical focus:ring-2 focus:ring-critical/20"
-                    : "border-hairline-soft focus:border-primary focus:ring-2 focus:ring-primary/20"
-                )}
-              />
-            </div>
-            {isEditMode ? (
-              <p className="text-[11px] text-stone mt-1">
-                Tên đăng nhập được cố định và không thể chỉnh sửa.
-              </p>
-            ) : (
-              errors.username && (
-                <p className="flex items-center gap-1 text-[11px] text-critical mt-1">
-                  <AlertCircle className="w-3 h-3 shrink-0" />
-                  <span>{errors.username.message}</span>
-                </p>
-              )
-            )}
+      <FormikProvider value={formik}>
+        <form onSubmit={formik.handleSubmit} className="space-y-4">
+          {/* Hàng 1: Tên đăng nhập & Mật khẩu */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <InputField
+              name="username"
+              label="Tên đăng nhập"
+              required
+              disabled={isEditMode}
+              icon={User}
+              placeholder="VD: nguyenvanan"
+              helperText={
+                isEditMode
+                  ? "Tên đăng nhập được cố định và không thể chỉnh sửa."
+                  : undefined
+              }
+            />
+
+            <InputField
+              name="password"
+              type="password"
+              label={isEditMode ? "Mật khẩu mới (tùy chọn)" : "Mật khẩu ban đầu"}
+              required={!isEditMode}
+              icon={Lock}
+              showPasswordToggle
+              placeholder={
+                isEditMode
+                  ? "Bỏ trống nếu giữ nguyên mật khẩu"
+                  : "Tối thiểu 6 ký tự"
+              }
+            />
           </div>
 
-          {/* Mật khẩu */}
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-xs font-semibold text-ink-deep mb-1.5"
-            >
-              {isEditMode ? "Mật khẩu mới (tùy chọn)" : "Mật khẩu ban đầu"}{" "}
-              {!isEditMode && <span className="text-critical">*</span>}
-            </label>
-            <div className="relative">
-              <Lock className="w-4 h-4 text-stone absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                id="password"
-                type="password"
-                {...register("password")}
-                placeholder={
-                  isEditMode
-                    ? "Bỏ trống nếu giữ nguyên mật khẩu"
-                    : "Tối thiểu 6 ký tự"
-                }
-                className={cn(
-                  "w-full pl-9 pr-3 py-2 rounded-xl border bg-canvas text-xs text-ink placeholder:text-stone focus:outline-none transition-all",
-                  errors.password
-                    ? "border-critical focus:border-critical focus:ring-2 focus:ring-critical/20"
-                    : "border-hairline-soft focus:border-primary focus:ring-2 focus:ring-primary/20"
-                )}
-              />
-            </div>
-            {errors.password && (
-              <p className="flex items-center gap-1 text-[11px] text-critical mt-1">
-                <AlertCircle className="w-3 h-3 shrink-0" />
-                <span>{errors.password.message}</span>
-              </p>
-            )}
-          </div>
-        </div>
+          {/* Hàng 2: Họ và tên & Địa chỉ Email */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <InputField
+              name="fullName"
+              label="Họ và tên"
+              required
+              icon={User}
+              placeholder="VD: Nguyễn Văn An"
+            />
 
-        {/* Hàng 2: Họ và tên & Địa chỉ Email */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Họ và tên */}
-          <div>
-            <label
-              htmlFor="fullName"
-              className="block text-xs font-semibold text-ink-deep mb-1.5"
-            >
-              Họ và tên <span className="text-critical">*</span>
-            </label>
-            <div className="relative">
-              <User className="w-4 h-4 text-stone absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                id="fullName"
-                type="text"
-                {...register("fullName")}
-                placeholder="VD: Nguyễn Văn An"
-                className={cn(
-                  "w-full pl-9 pr-3 py-2 rounded-xl border bg-canvas text-xs text-ink placeholder:text-stone focus:outline-none transition-all",
-                  errors.fullName
-                    ? "border-critical focus:border-critical focus:ring-2 focus:ring-critical/20"
-                    : "border-hairline-soft focus:border-primary focus:ring-2 focus:ring-primary/20"
-                )}
-              />
-            </div>
-            {errors.fullName && (
-              <p className="flex items-center gap-1 text-[11px] text-critical mt-1">
-                <AlertCircle className="w-3 h-3 shrink-0" />
-                <span>{errors.fullName.message}</span>
-              </p>
-            )}
+            <InputField
+              name="email"
+              type="email"
+              label="Địa chỉ Email"
+              required
+              icon={Mail}
+              placeholder="VD: an.nguyen@company.com"
+            />
           </div>
 
-          {/* Email */}
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-xs font-semibold text-ink-deep mb-1.5"
-            >
-              Địa chỉ Email <span className="text-critical">*</span>
-            </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-stone absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                id="email"
-                type="email"
-                {...register("email")}
-                placeholder="VD: an.nguyen@company.com"
-                className={cn(
-                  "w-full pl-9 pr-3 py-2 rounded-xl border bg-canvas text-xs text-ink placeholder:text-stone focus:outline-none transition-all",
-                  errors.email
-                    ? "border-critical focus:border-critical focus:ring-2 focus:ring-critical/20"
-                    : "border-hairline-soft focus:border-primary focus:ring-2 focus:ring-primary/20"
-                )}
-              />
-            </div>
-            {errors.email && (
-              <p className="flex items-center gap-1 text-[11px] text-critical mt-1">
-                <AlertCircle className="w-3 h-3 shrink-0" />
-                <span>{errors.email.message}</span>
-              </p>
-            )}
-          </div>
-        </div>
+          {/* Hàng 3: Số điện thoại & Ngày vào làm */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <InputField
+              name="phone"
+              type="tel"
+              label="Số điện thoại"
+              icon={Phone}
+              placeholder="VD: 0912345678"
+            />
 
-        {/* Hàng 3: Số điện thoại & Ngày vào làm */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Số điện thoại */}
-          <div>
-            <label
-              htmlFor="phone"
-              className="block text-xs font-semibold text-ink-deep mb-1.5"
-            >
-              Số điện thoại
-            </label>
-            <div className="relative">
-              <Phone className="w-4 h-4 text-stone absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                id="phone"
-                type="tel"
-                {...register("phone")}
-                placeholder="VD: 0912345678"
-                className="w-full pl-9 pr-3 py-2 rounded-xl border border-hairline-soft bg-canvas text-xs text-ink placeholder:text-stone focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-              />
-            </div>
+            <InputField
+              name="joinDate"
+              type="date"
+              label="Ngày vào làm"
+              icon={Calendar}
+            />
           </div>
 
-          {/* Ngày vào làm */}
-          <div>
-            <label
-              htmlFor="joinDate"
-              className="block text-xs font-semibold text-ink-deep mb-1.5"
-            >
-              Ngày vào làm
-            </label>
-            <div className="relative">
-              <Calendar className="w-4 h-4 text-stone absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                id="joinDate"
-                type="date"
-                {...register("joinDate")}
-                className="w-full pl-9 pr-3 py-2 rounded-xl border border-hairline-soft bg-canvas text-xs text-ink placeholder:text-stone focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Hàng 4: Phòng ban & Chức vụ */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Phòng ban */}
-          <div>
-            <label
-              htmlFor="department"
-              className="block text-xs font-semibold text-ink-deep mb-1.5"
-            >
-              Phòng ban
-            </label>
-            <div className="relative">
-              <Building className="w-4 h-4 text-stone absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                id="department"
-                type="text"
+          {/* Hàng 4: Phòng ban & Chức vụ */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <InputField
+                name="department"
+                label="Phòng ban"
+                icon={Building}
                 list="department-suggestions"
-                {...register("department")}
                 placeholder="VD: Kỹ thuật, Kinh doanh, Nhân sự..."
-                className="w-full pl-9 pr-3 py-2 rounded-xl border border-hairline-soft bg-canvas text-xs text-ink placeholder:text-stone focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
               <datalist id="department-suggestions">
                 <option value="Kỹ thuật" />
@@ -421,124 +269,37 @@ export default function EmployeeFormModal({
                 <option value="Vận hành" />
               </datalist>
             </div>
-          </div>
 
-          {/* Chức vụ */}
-          <div>
-            <label
-              htmlFor="position"
-              className="block text-xs font-semibold text-ink-deep mb-1.5"
-            >
-              Chức vụ / Vị trí
-            </label>
-            <div className="relative">
-              <Briefcase className="w-4 h-4 text-stone absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                id="position"
-                type="text"
-                {...register("position")}
-                placeholder="VD: Kỹ sư phần mềm, Chuyên viên tuyển dụng..."
-                className="w-full pl-9 pr-3 py-2 rounded-xl border border-hairline-soft bg-canvas text-xs text-ink placeholder:text-stone focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Hàng 5: Lương cơ bản */}
-        <div>
-          <label
-            htmlFor="baseSalary"
-            className="block text-xs font-semibold text-ink-deep mb-1.5"
-          >
-            Lương cơ bản (VND / tháng)
-          </label>
-          <div className="relative">
-            <Banknote className="w-4 h-4 text-stone absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              id="baseSalary"
-              type="number"
-              step="500000"
-              min="0"
-              {...register("baseSalary")}
-              placeholder="VD: 10000000"
-              className={cn(
-                "w-full pl-9 pr-3 py-2 rounded-xl border border-hairline-soft bg-canvas text-xs font-mono text-ink placeholder:text-stone focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all",
-                errors.baseSalary && "border-critical focus:border-critical focus:ring-critical/20"
-              )}
+            <InputField
+              name="position"
+              label="Chức vụ / Vị trí"
+              icon={Briefcase}
+              placeholder="VD: Kỹ sư phần mềm, Chuyên viên tuyển dụng..."
             />
           </div>
-          {errors.baseSalary ? (
-            <p className="flex items-center gap-1 text-[11px] text-critical mt-1">
-              <AlertCircle className="w-3 h-3 shrink-0" />
-              <span>{errors.baseSalary.message}</span>
-            </p>
-          ) : (
-            <p className="text-[11px] text-stone mt-1">
-              Mức lương cơ sở dùng để tính lương theo ngày công trong kỳ chốt lương.
-            </p>
-          )}
-        </div>
 
-        {/* Hàng 6: Vai trò hệ thống (Role) */}
-        <div className="pt-1">
-          <label className="block text-xs font-semibold text-ink-deep mb-2">
-            Vai trò hệ thống <span className="text-critical">*</span>
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <label
-              className={cn(
-                "flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all",
-                "hover:border-primary/50 hover:bg-surface-soft/50"
-              )}
-            >
-              <input
-                type="radio"
-                value="employee"
-                {...register("role")}
-                className="mt-0.5 text-primary focus:ring-primary/20"
-              />
-              <div>
-                <p className="text-xs font-semibold text-ink-deep flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-steel" />
-                  <span>Nhân viên thường</span>
-                </p>
-                <p className="text-[11px] text-stone mt-0.5">
-                  Chỉ được chấm công, xin nghỉ và xem bảng lương cá nhân
-                </p>
-              </div>
-            </label>
+          {/* Hàng 5: Lương cơ bản */}
+          <InputField
+            name="baseSalary"
+            type="number"
+            step="500000"
+            min="0"
+            label="Lương cơ bản (VND / tháng)"
+            icon={Banknote}
+            placeholder="VD: 10000000"
+            inputClassName="font-mono"
+            helperText="Mức lương cơ sở dùng để tính lương theo ngày công trong kỳ chốt lương."
+          />
 
-            <label
-              className={cn(
-                "flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all",
-                "hover:border-primary/50 hover:bg-surface-soft/50"
-              )}
-            >
-              <input
-                type="radio"
-                value="admin"
-                {...register("role")}
-                className="mt-0.5 text-primary focus:ring-primary/20"
-              />
-              <div>
-                <p className="text-xs font-semibold text-ink-deep flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-primary" />
-                  <span>Quản trị viên (Admin)</span>
-                </p>
-                <p className="text-[11px] text-stone mt-0.5">
-                  Toàn quyền quản lý nhân viên, duyệt phép, tính lương và cài đặt
-                </p>
-              </div>
-            </label>
-          </div>
-          {errors.role && (
-            <p className="flex items-center gap-1 text-[11px] text-critical mt-1.5">
-              <AlertCircle className="w-3 h-3 shrink-0" />
-              <span>{errors.role.message}</span>
-            </p>
-          )}
-        </div>
-      </form>
+          {/* Hàng 6: Vai trò hệ thống (Role) */}
+          <RadioGroupField
+            name="role"
+            label="Vai trò hệ thống"
+            required
+            options={roleOptions}
+          />
+        </form>
+      </FormikProvider>
     </Modal>
   );
 }
