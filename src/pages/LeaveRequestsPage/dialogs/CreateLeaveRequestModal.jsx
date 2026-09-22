@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarPlus, Clock, Send, AlertCircle } from "lucide-react";
 import Modal from "@/components/modal/Modal";
 import { leaveRequestSchema } from "@/validators/leaveRequest.validator";
-import { leaveRequestsServices } from "@/services/leaveRequestsServices";
+import { leaveRequestsServices } from "../services/leaveRequestsServices";
 import { toast } from "sonner";
 
 export default function CreateLeaveRequestModal({ isOpen, onClose, onSuccess }) {

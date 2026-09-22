@@ -7,7 +7,7 @@ import EmployeeFormModal from "./dialogs/EmployeeFormModal";
 import DeleteEmployeeModal from "./dialogs/DeleteEmployeeModal";
 import StatCard from "@/components/common/StatCard";
 import SearchInput from "@/components/common/SearchInput";
-import { employeeServices } from "@/services/employeeServices";
+import { employeeServices } from "./services/employeeServices";
 import { toast } from "sonner";
 import {
   Users,

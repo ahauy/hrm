@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useLeaveRequests } from "@/hooks/useLeaveRequests";
+import { useLeaveRequests } from "./hooks/useLeaveRequests";
 import { usePagination } from "@/hooks/usePagination";
 import NotAuthorPage from "@/pages/NotAuthorPage";
 import TableLeaveRequests from "@/components/table/TableLeaveRequests";

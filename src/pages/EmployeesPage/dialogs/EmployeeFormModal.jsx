@@ -21,7 +21,7 @@ import {
   createEmployeeSchema,
   updateEmployeeSchema,
 } from "@/validators/employee.validator";
-import { employeeServices } from "@/services/employeeServices";
+import { employeeServices } from "../services/employeeServices";
 import { toast } from "sonner";
 import { cn } from "@/utils/cn";
 
