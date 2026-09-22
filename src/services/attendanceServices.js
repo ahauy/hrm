@@ -1,4 +1,4 @@
-import api from "../utils/axios.js";
+import api from "@/utils/axios";
 
 export const attendanceServices = {
   // Lấy danh sách điểm danh (nếu employee: chỉ của mình, nếu admin: toàn bộ hoặc lọc theo employeeId)

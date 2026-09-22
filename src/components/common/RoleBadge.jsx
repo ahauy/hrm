@@ -1,5 +1,5 @@
 import { Shield, User } from "lucide-react";
-import { cn } from "../../utils/cn.js";
+import { cn } from "@/utils/cn";
 
 /**
  * Component RoleBadge dùng chung

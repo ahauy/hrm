@@ -1,4 +1,4 @@
-import { useAuthStore } from "../stores/useAuthStore.js";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 /**
  * Custom Hook useAuth

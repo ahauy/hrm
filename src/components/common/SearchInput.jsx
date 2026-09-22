@@ -1,5 +1,5 @@
 import { Search, X } from "lucide-react";
-import { cn } from "../../utils/cn.js";
+import { cn } from "@/utils/cn";
 
 /**
  * Component SearchInput dùng chung

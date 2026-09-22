@@ -1,4 +1,4 @@
-import api from "../utils/axios.js";
+import api from "@/utils/axios";
 
 export const settingsServices = {
   // Lấy cấu hình công ty (standardWorkDays, ...)

@@ -1,7 +1,7 @@
-import Table from "./Table";
-import StatusBadge from "../common/StatusBadge.jsx";
+import Table from "@/components/table/Table";
+import StatusBadge from "@/components/common/StatusBadge";
 import { Check, X, Calendar, Clock, User } from "lucide-react";
-import { formatDate } from "../../utils/formatTime.js";
+import { formatDate } from "@/utils/formatTime";
 
 /**
  * Component TableLeaveRequests

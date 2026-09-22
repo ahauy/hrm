@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, User, Settings, LogOut } from "lucide-react";
-import { useAuth } from "../../hooks/useAuth.js";
-import { cn } from "../../utils/cn.js";
-import RoleBadge from "../common/RoleBadge.jsx";
+import { useAuth } from "@/hooks/useAuth";
+import { cn } from "@/utils/cn";
+import RoleBadge from "@/components/common/RoleBadge";
 
 export default function UserProfile() {
   const { profile, logOut, isAdmin } = useAuth();

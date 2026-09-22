@@ -1,4 +1,4 @@
-import { getWorkDuration } from "../../utils/formatTime";
+import { getWorkDuration } from "@/utils/formatTime";
 
 export default function AttendanceBadge({
   hasCheckedIn,

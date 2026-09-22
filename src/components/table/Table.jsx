@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Inbox } from "lucide-react";
-import { cn } from "../../utils/cn";
+import { cn } from "@/utils/cn";
 
 /**
  * Generic Table Component

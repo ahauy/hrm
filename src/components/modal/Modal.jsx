@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { cn } from "../../utils/cn.js";
+import { cn } from "@/utils/cn";
 
 const SIZE_MAP = {
   sm: "max-w-sm",

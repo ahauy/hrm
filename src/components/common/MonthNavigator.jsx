@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
-import { cn } from "../../utils/cn.js";
+import { cn } from "@/utils/cn";
 
 /**
  * Component MonthNavigator dùng chung

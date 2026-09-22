@@ -1,4 +1,4 @@
-import api from "../utils/axios.js"
+import api from "@/utils/axios";
 
 // export const URL = "https://lesson-starter-1.onrender.com/"
 
