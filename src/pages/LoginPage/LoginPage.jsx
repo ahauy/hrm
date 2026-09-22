@@ -1,42 +1,37 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { FormikProvider, useFormik } from "formik";
+import { InputField, CheckboxField } from "@/components/form";
 import { loginSchema } from "@/validators/auth.validator";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { User, EyeOff, Loader, Eye, Lock } from "lucide-react";
+import { User, Loader, Lock } from "lucide-react";
 
 const LoginPage = () => {
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
+  const formik = useFormik({
+    initialValues: {
       username: "",
       password: "",
+      rememberMe: false,
+    },
+    validationSchema: loginSchema,
+    onSubmit: async (values) => {
+      try {
+        setIsLoading(true);
+        await login(values);
+        toast.success("Đăng nhập thành công!");
+        navigate("/dashboard");
+      } catch {
+        toast.error("Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin.");
+      } finally {
+        setIsLoading(false);
+      }
     },
   });
-
-  const onSubmit = async (data) => {
-    try {
-      setIsLoading(true);
-      await login(data);
-      toast.success("Đăng nhập thành công!");
-      navigate("/dashboard");
-    } catch {
-      toast.error("Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="flex min-h-screen bg-canvas font-sans">
@@ -75,105 +70,53 @@ const LoginPage = () => {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 mt-6">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate ml-0.5 block">
-                Tài khoản
-              </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <User className="h-4 w-4 text-stone group-focus-within:text-primary transition-colors" />
-                </div>
-                <input
-                  {...register("username")}
-                  type="text"
-                  className={`block w-full pl-10 pr-4 py-2.5 bg-surface-soft border ${
-                    errors.username ? "border-critical" : "border-hairline"
-                  } rounded-xl text-ink text-xs focus:bg-canvas focus:border-primary outline-none transition-all placeholder:text-stone`}
-                  placeholder="Tên đăng nhập"
-                />
-              </div>
-              {errors.username && (
-                <p className="text-xs text-critical mt-1 ml-0.5">
-                  {errors.username.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-slate ml-0.5 block">
-                  Mật khẩu
-                </label>
-                <button
-                  type="button"
-                  className="text-xs text-primary hover:text-primary-deep transition-colors cursor-pointer"
-                >
-                  Quên mật khẩu?
-                </button>
-              </div>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-stone group-focus-within:text-primary transition-colors" />
-                </div>
-                <input
-                  {...register("password")}
-                  type={showPassword ? "text" : "password"}
-                  className={`block w-full pl-10 pr-11 py-2.5 bg-surface-soft border ${
-                    errors.password ? "border-critical" : "border-hairline"
-                  } rounded-xl text-ink text-xs focus:bg-canvas focus:border-primary outline-none transition-all placeholder:text-stone`}
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-stone hover:text-ink cursor-pointer"
-                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="text-xs text-critical mt-1 ml-0.5">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
-
-            <div className="flex items-center space-x-2 ml-0.5">
-              <input
-                {...register("rememberMe")}
-                id="remember"
-                type="checkbox"
-                className="w-4 h-4 rounded border-hairline text-primary focus:ring-primary accent-[#0064e0] cursor-pointer"
+          <FormikProvider value={formik}>
+            <form onSubmit={formik.handleSubmit} className="space-y-5 mt-6">
+              <InputField
+                name="username"
+                label="Tài khoản"
+                placeholder="Tên đăng nhập"
+                icon={User}
               />
-              <label
-                htmlFor="remember"
-                className="text-xs text-steel cursor-pointer hover:text-ink transition-colors select-none"
-              >
-                Ghi nhớ đăng nhập trên thiết bị này
-              </label>
-            </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-primary hover:bg-primary-deep active:bg-primary-deep text-white py-3 text-xs font-semibold rounded-xl transition-all shadow-xs flex items-center justify-center space-x-2 mt-2 cursor-pointer disabled:opacity-50"
-            >
-              {isLoading ? (
-                <>
-                  <Loader className="h-4 w-4 animate-spin" />
-                  <span>Đang xác thực...</span>
-                </>
-              ) : (
-                <span>Đăng nhập</span>
-              )}
-            </button>
-          </form>
+              <InputField
+                name="password"
+                type="password"
+                label="Mật khẩu"
+                placeholder="••••••••"
+                icon={Lock}
+                showPasswordToggle
+                rightElement={
+                  <button
+                    type="button"
+                    className="text-xs text-primary hover:text-primary-deep transition-colors cursor-pointer"
+                  >
+                    Quên mật khẩu?
+                  </button>
+                }
+              />
+
+              <CheckboxField
+                name="rememberMe"
+                label="Ghi nhớ đăng nhập trên thiết bị này"
+              />
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-primary hover:bg-primary-deep active:bg-primary-deep text-white py-3 text-xs font-semibold rounded-xl transition-all shadow-xs flex items-center justify-center space-x-2 mt-2 cursor-pointer disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader className="h-4 w-4 animate-spin" />
+                    <span>Đang xác thực...</span>
+                  </>
+                ) : (
+                  <span>Đăng nhập</span>
+                )}
+              </button>
+            </form>
+          </FormikProvider>
 
           <div className="pt-6 text-center border-t border-hairline-soft">
             <p className="text-xs text-stone">
