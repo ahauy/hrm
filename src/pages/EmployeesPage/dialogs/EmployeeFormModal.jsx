@@ -20,6 +20,7 @@ import {
   updateEmployeeSchema,
 } from "@/validators/employee.validator";
 import { employeeServices } from "../services/employeeServices";
+import { queryClient, QUERY_KEYS } from "@/config/queryClient";
 import { toast } from "sonner";
 
 /**
@@ -94,6 +95,7 @@ export default function EmployeeFormModal({
           toast.success(`Thêm nhân viên mới "${values.fullName}" thành công!`);
         }
 
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.employees });
         handleClose();
         onSuccess?.();
       } catch (error) {

@@ -5,6 +5,7 @@ import Modal from "@/components/modal/Modal";
 import { InputField, TextareaField } from "@/components/form";
 import { leaveRequestSchema } from "@/validators/leaveRequest.validator";
 import { leaveRequestsServices } from "../services/leaveRequestsServices";
+import { queryClient, QUERY_KEYS } from "@/config/queryClient";
 import { toast } from "sonner";
 
 export default function CreateLeaveRequestModal({ isOpen, onClose, onSuccess }) {
@@ -22,6 +23,7 @@ export default function CreateLeaveRequestModal({ isOpen, onClose, onSuccess }) 
           toDate: values.toDate,
           reason: values.reason.trim(),
         });
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.leaveRequests });
         toast.success("Tạo đơn xin nghỉ phép thành công!");
         handleClose();
         onSuccess?.();

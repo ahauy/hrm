@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePagination } from "@/hooks/usePagination";
 import NotAuthorPage from "@/pages/NotAuthorPage";
@@ -20,15 +20,23 @@ import {
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 
+import { useEmployeesQuery } from "./hooks/useEmployeesQuery";
+import { queryClient, QUERY_KEYS } from "@/config/queryClient";
+
 const PAGE_SIZE = 8;
 
 export default function EmployeesPage() {
   const { profile, isAuthLoading, isAdmin } = useAuth();
 
-  // Dữ liệu danh sách nhân viên
-  const [employees, setEmployees] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  // Dữ liệu danh sách nhân viên qua TanStack Query
+  const {
+    data: employees = [],
+    isLoading,
+    isFetching,
+    refetch,
+  } = useEmployeesQuery({ enabled: Boolean(profile && isAdmin) });
+
+  const isRefreshing = isFetching && !isLoading;
 
   // Bộ lọc & Tìm kiếm
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,35 +55,9 @@ export default function EmployeesPage() {
   });
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Tải danh sách nhân viên từ API
-  const fetchEmployees = useCallback(async () => {
-    try {
-      const data = await employeeServices.getEmployees();
-      setEmployees(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Lỗi khi tải danh sách nhân viên:", error);
-      toast.error("Không thể tải danh sách nhân viên từ máy chủ");
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const loadData = async () => {
-      if (profile && isAdmin) {
-        await fetchEmployees();
-      } else if (profile) {
-        setIsLoading(false);
-      }
-    };
-    loadData();
-  }, [profile, isAdmin, fetchEmployees]);
-
   // Làm mới dữ liệu
   const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await fetchEmployees();
+    await refetch();
     toast.success("Đã làm mới danh sách nhân viên");
   };
 
@@ -115,7 +97,7 @@ export default function EmployeesPage() {
       await employeeServices.deleteEmployee(empId);
       toast.success(`Đã xóa nhân viên "${empName}" thành công!`);
       setDeleteModal({ isOpen: false, employee: null });
-      await fetchEmployees();
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.employees });
     } catch (error) {
       console.error("Lỗi khi xóa nhân viên:", error);
       const serverMsg =
@@ -412,7 +394,9 @@ export default function EmployeesPage() {
       <EmployeeFormModal
         isOpen={formModal.isOpen}
         onClose={() => setFormModal({ isOpen: false, employee: null })}
-        onSuccess={fetchEmployees}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.employees });
+        }}
         employee={formModal.employee}
       />
 
