@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import { attendanceServices } from "../services/attendanceServices";
+import { queryClient, QUERY_KEYS } from "@/config/queryClient";
 import { getWorkDuration } from "@/utils/formatTime";
 
 /**
@@ -66,6 +67,7 @@ export function useAttendanceAction({
       const res = await attendanceServices.checkIn();
       toast.success("Chấm công vào thành công!");
 
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.attendance });
       if (res && res.id) {
         setAttendances?.((prev) => [res, ...prev]);
       } else if (onReload) {
@@ -103,6 +105,7 @@ export function useAttendanceAction({
       const res = await attendanceServices.checkOut();
       toast.success("Chấm công ra thành công!");
 
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.attendance });
       if (res && res.id) {
         setAttendances?.((prev) =>
           prev.map((item) => (item.id === res.id ? res : item))
