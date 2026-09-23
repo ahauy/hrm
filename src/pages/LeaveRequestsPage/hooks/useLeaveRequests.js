@@ -1,89 +1,68 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { leaveRequestsServices } from "../services/leaveRequestsServices";
 import { employeeServices } from "@/pages/EmployeesPage/services/employeeServices";
+import { QUERY_KEYS } from "@/config/queryClient";
 import { toast } from "sonner";
 
 /**
- * Custom Hook useLeaveRequests
- * Gom toàn bộ logic tải dữ liệu, quản lý trạng thái, duyệt/từ chối đơn nghỉ phép
+ * Custom Hook useLeaveRequests sử dụng TanStack Query
+ * Quản lý caching danh sách đơn nghỉ phép, thông tin nhân viên và phê duyệt đơn
  *
  * @param {Object} options
- * @param {boolean} options.isAdmin - Người dùng có quyền Admin hay không
+ * @param {boolean} [options.isAdmin=false] - Người dùng có quyền Admin hay không
  * @param {boolean} [options.autoFetch=true] - Tự động tải dữ liệu khi mount
  */
 export function useLeaveRequests({ isAdmin = false, autoFetch = true } = {}) {
-  const [requests, setRequests] = useState([]);
-  const [employeesMap, setEmployeesMap] = useState({});
-  const [isLoading, setIsLoading] = useState(autoFetch);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const queryClient = useQueryClient();
 
-  const fetchData = useCallback(async () => {
-    try {
-      const reqPromise = leaveRequestsServices.getLeaveRequests();
-      const empPromise = isAdmin
-        ? employeeServices.getEmployees().catch(() => [])
-        : Promise.resolve([]);
+  // Truy vấn danh sách đơn xin nghỉ phép có cache
+  const {
+    data: requests = [],
+    isLoading: isLeaveLoading,
+    isFetching: isLeaveFetching,
+    refetch: refetchLeave,
+  } = useQuery({
+    queryKey: QUERY_KEYS.leaveRequests,
+    queryFn: async () => {
+      const data = await leaveRequestsServices.getLeaveRequests();
+      return Array.isArray(data) ? data : [];
+    },
+    enabled: autoFetch,
+  });
 
-      const [reqData, empData] = await Promise.all([reqPromise, empPromise]);
+  // Truy vấn danh sách nhân viên để map tên (chỉ khi là Admin)
+  const {
+    data: employees = [],
+    isLoading: isEmpLoading,
+    refetch: refetchEmp,
+  } = useQuery({
+    queryKey: QUERY_KEYS.employees,
+    queryFn: async () => {
+      const data = await employeeServices.getEmployees();
+      return Array.isArray(data) ? data : [];
+    },
+    enabled: autoFetch && isAdmin,
+  });
 
-      setRequests(Array.isArray(reqData) ? reqData : []);
+  // Tạo map id -> employee để tra cứu nhanh thông tin
+  const employeesMap = useMemo(() => {
+    if (!isAdmin || !Array.isArray(employees)) return {};
+    const map = {};
+    employees.forEach((emp) => {
+      map[emp.id] = emp;
+    });
+    return map;
+  }, [isAdmin, employees]);
 
-      if (isAdmin && Array.isArray(empData)) {
-        const map = {};
-        empData.forEach((emp) => {
-          map[emp.id] = emp;
-        });
-        setEmployeesMap(map);
-      }
-    } catch (error) {
-      console.error("Lỗi khi tải danh sách đơn nghỉ phép:", error);
-      toast.error("Không thể tải danh sách đơn nghỉ phép");
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, [isAdmin]);
-
-  useEffect(() => {
-    let isMounted = true;
-    if (autoFetch) {
-      (async () => {
-        try {
-          const reqPromise = leaveRequestsServices.getLeaveRequests();
-          const empPromise = isAdmin
-            ? employeeServices.getEmployees().catch(() => [])
-            : Promise.resolve([]);
-
-          const [reqData, empData] = await Promise.all([reqPromise, empPromise]);
-          if (!isMounted) return;
-
-          setRequests(Array.isArray(reqData) ? reqData : []);
-
-          if (isAdmin && Array.isArray(empData)) {
-            const map = {};
-            empData.forEach((emp) => {
-              map[emp.id] = emp;
-            });
-            setEmployeesMap(map);
-          }
-        } catch (error) {
-          console.error("Lỗi khi tải danh sách đơn nghỉ phép:", error);
-        } finally {
-          if (isMounted) {
-            setIsLoading(false);
-            setIsRefreshing(false);
-          }
-        }
-      })();
-    }
-    return () => {
-      isMounted = false;
-    };
-  }, [autoFetch, isAdmin]);
+  const isLoading = isLeaveLoading || (isAdmin && isEmpLoading);
+  const isRefreshing = isLeaveFetching && !isLoading;
 
   const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await fetchData();
+    await Promise.all([
+      refetchLeave(),
+      isAdmin ? refetchEmp() : Promise.resolve(),
+    ]);
     toast.success("Đã làm mới danh sách đơn nghỉ phép");
   };
 
@@ -92,11 +71,7 @@ export function useLeaveRequests({ isAdmin = false, autoFetch = true } = {}) {
     try {
       await leaveRequestsServices.updateStatus(id, "approved");
       toast.success(`Đã duyệt đơn nghỉ phép #${id}`);
-      setRequests((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, status: "approved" } : item
-        )
-      );
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.leaveRequests });
       return true;
     } catch (error) {
       console.error("Lỗi khi duyệt đơn:", error);
@@ -110,11 +85,7 @@ export function useLeaveRequests({ isAdmin = false, autoFetch = true } = {}) {
     try {
       await leaveRequestsServices.updateStatus(id, "rejected");
       toast.success(`Đã từ chối đơn nghỉ phép #${id}`);
-      setRequests((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, status: "rejected" } : item
-        )
-      );
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.leaveRequests });
       return true;
     } catch (error) {
       console.error("Lỗi khi từ chối đơn:", error);
@@ -141,12 +112,12 @@ export function useLeaveRequests({ isAdmin = false, autoFetch = true } = {}) {
 
   return {
     requests,
-    setRequests,
     employeesMap,
     isLoading,
     isRefreshing,
     stats,
-    fetchData,
+    fetchData: refetchLeave,
+    refetch: refetchLeave,
     handleRefresh,
     handleApprove,
     handleReject,

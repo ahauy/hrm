@@ -1,13 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import NotAuthorPage from "@/pages/NotAuthorPage";
 import Attendance from "@/components/attendance/Attendance";
 import AttendanceCalendar from "./components/AttendanceCalendar";
 import AdminAttendanceTable from "./components/AdminAttendanceTable";
 import EmployeeAttendanceModal from "./dialogs/EmployeeAttendanceModal";
-import { attendanceServices } from "./services/attendanceServices";
-import { employeeServices } from "@/pages/EmployeesPage/services/employeeServices";
 import { settingsServices } from "@/pages/SettingPage/services/settingsServices";
+import { useAttendanceQuery } from "./hooks/useAttendanceQuery";
+import { useEmployeesQuery } from "@/pages/EmployeesPage/hooks/useEmployeesQuery";
 import { useAttendanceAction } from "./hooks/useAttendanceAction";
 import { toast } from "sonner";
 import {
@@ -22,12 +23,37 @@ import RegulationsModal from "./dialogs/RegulationsModal";
 export default function AttendancePage() {
   const { profile, isAdmin, isEmployee } = useAuth();
 
-  // Dữ liệu chung
-  const [attendances, setAttendances] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const [standardWorkDays, setStandardWorkDays] = useState(22);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  // Dữ liệu chấm công qua TanStack Query
+  const {
+    data: attendances = [],
+    isLoading: isAttLoading,
+    isFetching: isAttFetching,
+    refetch: refetchAttendance,
+  } = useAttendanceQuery({ enabled: Boolean(isAdmin || isEmployee) });
+
+  // Dữ liệu nhân viên (Admin) qua TanStack Query (tái sử dụng cache)
+  const {
+    data: employees = [],
+    isLoading: isEmpLoading,
+    refetch: refetchEmployees,
+  } = useEmployeesQuery({ enabled: Boolean(isAdmin) });
+
+  // Dữ liệu cấu hình ngày công chuẩn
+  const { data: settingsData } = useQuery({
+    queryKey: ["settings"],
+    queryFn: async () => {
+      try {
+        return await settingsServices.getSettings();
+      } catch {
+        return { standardWorkDays: 22 };
+      }
+    },
+    enabled: Boolean(isAdmin || isEmployee),
+  });
+
+  const standardWorkDays = Number(settingsData?.standardWorkDays) || 22;
+  const isLoading = isAttLoading || (isAdmin && isEmpLoading);
+  const isRefreshing = isAttFetching && !isLoading;
 
   // Tab chuyển đổi dành cho Quản trị viên (Admin): 'employees' | 'personal'
   const [adminViewMode, setAdminViewMode] = useState("employees");
@@ -39,76 +65,21 @@ export default function AttendancePage() {
   // Modal xem quy chế ca làm việc & ân hạn đi muộn
   const [showPolicyModal, setShowPolicyModal] = useState(false);
 
-  // Tải dữ liệu từ API
-  const fetchData = useCallback(async () => {
-    try {
-      // 1. Tải danh sách điểm danh (nếu admin: toàn bộ; nếu employee: của chính mình)
-      const attPromise = attendanceServices.getAttendance();
-
-      // 2. Tải cấu hình ngày công chuẩn  
-      const settingsPromise = settingsServices
-        .getSettings()
-        .catch(() => ({ standardWorkDays: 22 }));
-
-      // 3. Nếu là admin, tải thêm danh sách nhân viên
-      const empPromise = isAdmin
-        ? employeeServices.getEmployees().catch(() => [])
-        : Promise.resolve([]);
-
-      const [attData, settingsData, empData] = await Promise.all([
-        attPromise,
-        settingsPromise,
-        empPromise,
-      ]);
-
-      setAttendances(Array.isArray(attData) ? attData : []);
-      if (settingsData && settingsData.standardWorkDays) {
-        setStandardWorkDays(Number(settingsData.standardWorkDays) || 22);
-      }
-      if (Array.isArray(empData)) {
-        setEmployees(empData);
-      }
-    } catch (error) {
-      console.error("Lỗi khi tải dữ liệu chấm công:", error);
-      toast.error("Không thể tải thông tin chấm công");
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, [isAdmin]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadInitial() {
-      if (!isAdmin && !isEmployee) {
-        if (isMounted) setIsLoading(false);
-        return;
-      }
-      await fetchData();
-    }
-
-    loadInitial();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isAdmin, isEmployee, fetchData]);
-
   // Làm mới dữ liệu
   const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await fetchData();
+    await Promise.all([
+      refetchAttendance(),
+      isAdmin ? refetchEmployees() : Promise.resolve(),
+    ]);
     toast.success("Đã làm mới dữ liệu chấm công");
   };
 
   // Dùng custom hook quản lý toàn bộ logic chấm công cá nhân
   const { attendanceProps, myAttendances } = useAttendanceAction({
     attendances,
-    setAttendances,
     currentUserId: profile?.id,
     isAdmin,
-    onReload: fetchData,
+    onReload: refetchAttendance,
     isLoading,
     isRefreshing,
   });

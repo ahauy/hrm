@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLeaveRequests } from "@/pages/LeaveRequestsPage/hooks/useLeaveRequests";
-import { attendanceServices } from "@/pages/AttendancePage/services/attendanceServices";
+import { useAttendanceQuery } from "@/pages/AttendancePage/hooks/useAttendanceQuery";
 import { useAttendanceAction } from "@/pages/AttendancePage/hooks/useAttendanceAction";
 import { usePagination } from "@/hooks/usePagination";
 import NotAuthorPage from "@/pages/NotAuthorPage";
@@ -12,7 +12,6 @@ import Attendance from "@/components/attendance/Attendance";
 import SearchInput from "@/components/common/SearchInput";
 import { FileText, RefreshCw, CalendarCheck, Plus } from "lucide-react";
 import { cn } from "@/utils/cn";
-import { toast } from "sonner";
 
 const LEAVE_PAGE_SIZE = 8;
 
@@ -20,10 +19,15 @@ export default function DashboardPage() {
   const { profile, isAdmin, isEmployee } = useAuth();
   const navigate = useNavigate();
 
-  // Dữ liệu chấm công
-  const [attendances, setAttendances] = useState([]);
-  const [isAttLoading, setIsAttLoading] = useState(true);
-  const [isAttRefreshing, setIsAttRefreshing] = useState(false);
+  // Dữ liệu chấm công qua TanStack Query
+  const {
+    data: attendances = [],
+    isLoading: isAttLoading,
+    isFetching: isAttFetching,
+    refetch: refetchAttendance,
+  } = useAttendanceQuery({ enabled: Boolean(isAdmin || isEmployee) });
+
+  const isAttRefreshing = isAttFetching && !isAttLoading;
 
   // Quản lý đơn nghỉ phép qua custom hook dùng chung
   const {
@@ -37,37 +41,9 @@ export default function DashboardPage() {
     handleReject,
   } = useLeaveRequests({ isAdmin, autoFetch: isAdmin || isEmployee });
 
-  // Tải dữ liệu chấm công
-  const fetchAttendanceData = useCallback(async () => {
-    try {
-      const attData = await attendanceServices.getAttendance();
-      setAttendances(Array.isArray(attData) ? attData : []);
-    } catch (error) {
-      console.error("Lỗi khi tải dữ liệu chấm công:", error);
-      toast.error("Không thể tải dữ liệu chấm công");
-    } finally {
-      setIsAttLoading(false);
-      setIsAttRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function loadData() {
-      if ((isAdmin || isEmployee) && isMounted) {
-        await fetchAttendanceData();
-      }
-    }
-    loadData();
-    return () => {
-      isMounted = false;
-    };
-  }, [isAdmin, isEmployee, fetchAttendanceData]);
-
   // Làm mới toàn bộ dashboard
   const handleRefresh = async () => {
-    setIsAttRefreshing(true);
-    await Promise.all([handleRefreshLeave(), fetchAttendanceData()]);
+    await Promise.all([handleRefreshLeave(), refetchAttendance()]);
   };
 
   const isLoading = isAttLoading || isLeaveLoading;
@@ -82,7 +58,6 @@ export default function DashboardPage() {
     todayStr,
   } = useAttendanceAction({
     attendances,
-    setAttendances,
     currentUserId: profile?.id,
     isAdmin,
     onReload: handleRefresh,
